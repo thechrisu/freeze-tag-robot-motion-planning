@@ -19,15 +19,19 @@ class Solver {
      */
     constructor(problems) {
         this.problems = problems;
-        this.solutionStrings = [];
+        this.solvedSolutions = [];
     }
 
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
             let solution = new Solution(this.problems[i]);
             solution.solve();
-            this.solutionStrings.push(solution.toString());
+            this.solvedSolutions.push(solution);
         }
+    }
+
+    getSolutions() {
+        return this.solvedSolutions;
     }
 
     /**
@@ -35,8 +39,8 @@ class Solver {
      */
     exportToFile(filePath) {
         let output = [GROUP_NAME, GROUP_PASS, ''].join('\n');
-        for (let i = 0; i < this.solutionStrings.length; i++) {
-            output += (i + 1) + ': ' + this.solutionStrings[i] + '\n';
+        for (let i = 0; i < this.solvedSolutions.length; i++) {
+            output += (i + 1) + ': ' + this.solvedSolutions[i].toString() + '\n';
         }
         fs.writeFileSync(filePath, output);
     }

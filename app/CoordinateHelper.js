@@ -12,6 +12,9 @@ class Point {
      * @param {number} y
      */
     constructor(x, y) {
+        if(isNaN(x) || isNaN(y)) {
+            throw 'Point is null: ' + x + ', ' + y;
+        }
         this.x = x;
         this.y = y;
     }
@@ -71,11 +74,16 @@ class CoordinateHelper {
         let pointArray = [];
 
         let points = pointArrayString.split('),(');
-        for(let i = 0; i < points.length; i++) {
-            pointArray.push(CoordinateHelper.extractPoint(points[i]));
-        }
+        //let points = pointArrayString.split(/(\),\s?\()/);
+        try {
+            for (let i = 0; i < points.length; i++) {
+                pointArray.push(CoordinateHelper.extractPoint(points[i]));
+            }
 
-        return pointArray;
+            return pointArray;
+        } catch (e) {
+            console.error('Point was null. Points: ' + points + ' original: ' + pointArrayString);
+        }
     }
 
 }

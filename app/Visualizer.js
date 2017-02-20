@@ -2,7 +2,7 @@
  * Created by c on 20/02/17.
  */
 
-//"use strict";
+"use strict";
 
 var solEx = {
     robotPaths: [
@@ -71,6 +71,7 @@ function drawRobotPath(points, ctx, scale) {
 }
 
 function drawObstacle(points, ctx, scale) {
+    // console.log('printing obs: ' + points.length + '; ' + JSON.stringify(points));
     do {
         ctx.fillStyle = "#" + ((1 << 24) * Math.random() | 2).toString(16);
     } while (ctx.fillStyle == "#ffffff" || (ctx.fillStyle[1] < '8' && ctx.fillStyle[3] < '8' && ctx.fillStyle[5] < '8'));
@@ -81,7 +82,6 @@ function drawObstacle(points, ctx, scale) {
         var sp = getScaledPoint(points[i], scale);
         ctx.lineTo(sp.x, sp.y);
     }
-    ctx.stroke();
     ctx.closePath();
     ctx.fill();
 }
@@ -119,6 +119,21 @@ function getScale(solutionObj) {
             if (pt.y < raw_min_y) {
                 raw_min_y = pt.y;
             }
+        }
+    }
+    for (var j = 0; j < solutionObj.robotLocations.length; j++) {
+        var pt = solutionObj.robotLocations[j];
+        if (pt.x > raw_max_x) {
+            raw_max_x = pt.x;
+        }
+        if (pt.y > raw_max_y) {
+            raw_max_y = pt.y;
+        }
+        if (pt.x < raw_min_x) {
+            raw_min_x = pt.x;
+        }
+        if (pt.y < raw_min_y) {
+            raw_min_y = pt.y;
         }
     }
     for (var i = 0; i < solutionObj.obstacles.length; i++) {
@@ -159,35 +174,51 @@ function getScale(solutionObj) {
     };
 }
 
-/**
- * This is the function you're looking for
- */
-function visualizeSolution(solutionObj, filename) {
-    var scale = getScale(solutionObj);
-    var canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
-    var ctx = canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
-    ctx.fillStyle = 'white';
-    ctx.fill();
-    drawRobotLocations(solutionObj.robotLocations, ctx, scale);
-    ctx.globalAlpha = 0.3;
-    for (var i = 0; i < solutionObj.obstacles.length; i++) {
-        drawObstacle(solutionObj.obstacles[i], ctx, scale);
+
+class Visualizer {
+
+    /**
+     * This is the function you're looking for
+     */
+    static visualizeSolution(solutionObj, filename) {
+        var scale = getScale(solutionObj);
+        var canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
+        var ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        drawRobotLocations(solutionObj.robotLocations, ctx, scale);
+        ctx.globalAlpha = 0.7;
+        // console.log('problem ' + solutionObj.problemNumber);
+        for (var i = 0; i < solutionObj.obstacles.length; i++) {
+            drawObstacle(solutionObj.obstacles[i], ctx, scale);
+        }
+        ctx.globalAlpha = 1.0;
+        for (var i = 0; i < solutionObj.robotPaths.length; i++) {
+            drawRobotPath(solutionObj.robotPaths[i], ctx, scale);
+        }
+        var out = fs.createWriteStream(__dirname + '/../visualizations/' + filename + '.png');
+        var stream = canvas.pngStream();
+        stream.on('data', function (c) {
+            out.write(c);
+        });
+        stream.on('end', function () {
+            console.log('saved png: ' + filename);
+        });
     }
-    ctx.globalAlpha = 1.0;
-    for (var i = 0; i < solutionObj.robotPaths.length; i++) {
-        drawRobotPath(solutionObj.robotPaths[i], ctx, scale);
+
+    static visualizeSolutions(solutions) {
+        for(let i = 0; i < solutions.length; i++) {
+            this.visualizeSolution(solutions[i], 'problem' + solutions[i].problemNumber);
+        }
     }
-    var out = fs.createWriteStream(__dirname + '/../' + filename + '.png');
-    var stream = canvas.pngStream();
-    stream.on('data', function (c) {
-        out.write(c);
-    });
-    stream.on('end', function () {
-        console.log('saved png');
-    });
 }
 
-//module.exports =
-visualizeSolution(solEx, 'problem');
+module.exports = {
+    Visualizer,
+    MAX_DRAWING_SIZE,
+    REAL_DRAWING_SIZE,
+    DOT_SIZE
+};
+//visualizeSolution(solEx, 'problem');
