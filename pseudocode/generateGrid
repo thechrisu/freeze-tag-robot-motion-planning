@@ -1,0 +1,39 @@
+class Grid
+	- double startX, startY, endX, endY
+
+
+
+
+generateGrid(grid)
+	if(grid is (empty or full))
+		fillGrid(grid)
+	else
+		if(gridSize == MIN_GRID_SIZE)
+			fillGrid(grid)
+		else
+			generateGrid(grid.subgrid(0)) // top left quarter
+			generateGrid(grid.subgrid(1)) // top right
+			generateGrid(grid.subgrid(2)) // bottom right
+			generateGrid(grid.subgrid(3)) // bottom left
+
+
+fillGrid(grid)
+	let status = getStatus(grid)
+
+	for i = grid.startX to grid.endX
+		for j = grid.startY to grid.endY
+			masterGrid[i, j] = status
+
+getStatus(grid)
+	if(grid is inside an obstacle)
+		return -1 // full
+	if(grid intersects an obstacle)
+		return 0 // mixed
+	else
+		return 1 // empty
+
+
+NOTES AND THOUGHTS:
+- "masterGrid" will just be a 2D array
+- In "getStatus" would you have to iterate through all obstacles or could this be optimised?
+	- Maybe something to do with only checking within a certain radius of the grid
