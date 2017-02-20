@@ -1,0 +1,26 @@
+{
+  "name": "freeze-tag-on-steroids",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/culshoefer/freeze-tag-on-steroids.git"
+  },
+    "author": "Christoph Ulshoefer",
+    "contributors": [{
+        "name": "Anirudh Pillai"
+    }, {
+        "name": "Timur Kuzhagaliyev"
+    }, {
+        "name": "Alasdair Hall"
+    }],
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/culshoefer/freeze-tag-on-steroids/issues"
+  },
+  "homepage": "https://github.com/culshoefer/freeze-tag-on-steroids#readme"
+}
