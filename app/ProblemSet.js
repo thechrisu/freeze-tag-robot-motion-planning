@@ -16,16 +16,19 @@ class Problem {
     /**
      * @param {Point[]} robotLocations
      * @param {Array.<Point[]>} obstacles
+     * @param {Number} problemNumber
      */
-    constructor(robotLocations, obstacles) {
+    constructor(robotLocations, obstacles, problemNumber) {
         this.robotLocations = robotLocations;
         this.obstacles = obstacles;
+        this.problemNumber = problemNumber;
     }
 
 }
 
-class ProblemSet {
+let currentProblemNumber = 1;
 
+class ProblemSet {
 
     /**
      * @callback problemSetCallback
@@ -62,8 +65,8 @@ class ProblemSet {
         } else {
             obstacles = [];
         }
-
-        problemSets.push(new Problem(robotLocations, obstacles));
+        problemSets.push(new Problem(robotLocations, obstacles, currentProblemNumber));
+        currentProblemNumber++;
     }
 
     /**
@@ -83,7 +86,8 @@ class ProblemSet {
         let obstacles = [];
         let obstacleStringArray = obstacleString.split(';');
         for(let i = 0; i < obstacleStringArray.length; i++) {
-            obstacles.push(CoordinateHelper.extractPointArray(obstacleStringArray[i]));
+            let noWhitespace = obstacleStringArray[i].replace(/\s/gi, '');
+            obstacles.push(CoordinateHelper.extractPointArray(noWhitespace));
         }
         return obstacles;
     }

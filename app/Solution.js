@@ -16,6 +16,7 @@ class Solution {
     constructor(problem) {
         this.robotLocations = problem.robotLocations;
         this.obstacles = problem.obstacles;
+        this.problemNumber = problem.problemNumber;
         /**
          * @type {Array.<Point[]>}
          */
