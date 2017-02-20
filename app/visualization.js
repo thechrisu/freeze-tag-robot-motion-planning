@@ -2,8 +2,10 @@
  * Created by c on 20/02/17.
  */
 
-solEx = {
-    robotLocations: [
+//"use strict";
+
+var solEx = {
+    robotPaths: [
         [
             {
                 x: 3.2,
@@ -11,7 +13,7 @@ solEx = {
             },
             {
                 x: 6.6,
-                y: 10.2
+                y: 30.2
             }
         ]
     ],
@@ -30,12 +32,18 @@ solEx = {
                 y: 10.1
             }
         ]
+    ],
+    robotLocations: [
+        {
+            x: 3.2,
+            y: 2.1
+        }
     ]
 };
 
 const MAX_DRAWING_SIZE = 1000.0;
 const REAL_DRAWING_SIZE = 900.0;
-const DOT_SIZE = 0.05;
+const DOT_SIZE = 5.0;
 
 var Canvas = require('canvas');
 var fs = require('fs');
@@ -57,7 +65,6 @@ function drawRobotPath(points, ctx, scale) {
     ctx.fillStyle = ctx.strokeStyle;
     for (var i = 0; i < points.length; i++) {
         var sp = getScaledPoint(points[i], scale);
-        ctx.fillRect(sp.x - 0.5 * DOT_SIZE * scale.factor, sp.y - 0.5 * DOT_SIZE * scale.factor, DOT_SIZE * scale.factor, DOT_SIZE * scale.factor);
         ctx.lineTo(sp.x, sp.y);
     }
     ctx.stroke();
@@ -79,6 +86,14 @@ function drawObstacle(points, ctx, scale) {
     ctx.fill();
 }
 
+function drawRobotLocations(points, ctx, scale) {
+    ctx.fillStyle = 'black';
+    for (var i = 0; i < points.length; i++) {
+        var sp = getScaledPoint(points[i], scale);
+        ctx.fillRect(sp.x - 0.5 * DOT_SIZE / scale.factor, sp.y - 0.5 * DOT_SIZE / scale.factor, DOT_SIZE, DOT_SIZE);
+    }
+}
+
 /**
  * @param solutionObj
  * @returns {{x_offset: number, y_offset: number, factor: number, post_offset: number}}
@@ -88,8 +103,8 @@ function getScale(solutionObj) {
         raw_max_y = 0.0,
         raw_min_x = 0.0,
         raw_min_y = 0.0;
-    for (var i = 0; i < solutionObj.robotLocations.length; i++) {
-        var pts = solutionObj.robotLocations[i];
+    for (var i = 0; i < solutionObj.robotPaths.length; i++) {
+        var pts = solutionObj.robotPaths[i];
         for (var j = 0; j < pts.length; j++) {
             var pt = pts[j];
             if (pt.x > raw_max_x) {
@@ -146,25 +161,25 @@ function getScale(solutionObj) {
 
 /**
  * This is the function you're looking for
- * @param solutionObj
  */
-function visualizeSolution(solutionObj) {
+function visualizeSolution(solutionObj, filename) {
     var scale = getScale(solutionObj);
-    canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
-    ctx = canvas.getContext('2d');
+    var canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
+    var ctx = canvas.getContext('2d');
     ctx.beginPath();
     ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
     ctx.fillStyle = 'white';
     ctx.fill();
+    drawRobotLocations(solutionObj.robotLocations, ctx, scale);
     ctx.globalAlpha = 0.3;
     for (var i = 0; i < solutionObj.obstacles.length; i++) {
         drawObstacle(solutionObj.obstacles[i], ctx, scale);
     }
     ctx.globalAlpha = 1.0;
-    for (var i = 0; i < solutionObj.robotLocations.length; i++) {
-        drawRobotPath(solutionObj.robotLocations[i], ctx, scale);
+    for (var i = 0; i < solutionObj.robotPaths.length; i++) {
+        drawRobotPath(solutionObj.robotPaths[i], ctx, scale);
     }
-    var out = fs.createWriteStream(__dirname + '/problem.png');
+    var out = fs.createWriteStream(__dirname + '/../' + filename + '.png');
     var stream = canvas.pngStream();
     stream.on('data', function (c) {
         out.write(c);
@@ -174,4 +189,5 @@ function visualizeSolution(solutionObj) {
     });
 }
 
-visualizeSolution(solEx);
+//module.exports =
+visualizeSolution(solEx, 'problem');
