@@ -41,7 +41,8 @@ function parseProblemArray(rawProblemString) {
 
 program.command('*')
     .usage("[mode]")
-    .description('Our solutions')
+    .description('Our solutions. Sorry for the crappy docstring here. all | [1,2,17] for solving all/selected problems. ' +
+        '-v | --visualize for visualizations')
     .option("-v, --visualize", "Whether to visualize the problems after solving them")
     .action(function(mode, options) {
         let selectedProblems = parseProblemArray(mode);
