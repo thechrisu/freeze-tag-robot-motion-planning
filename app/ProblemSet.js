@@ -1,5 +1,7 @@
 /**
- * Created by timbokz on 20/02/17.
+ * @author Timur Kuzhagaliyev <tim.kuzh@gmail.com>
+ * @copyright 2017
+ * @license MIT
  */
 
 "use strict";
@@ -9,14 +11,25 @@ const path = require('path');
 const readline = require('readline');
 const CoordinateHelper = require('./CoordinateHelper');
 
+class Problem {
+
+    /**
+     * @param {Point[]} robotLocations
+     * @param {Array.<Point[]>} obstacles
+     */
+    constructor(robotLocations, obstacles) {
+        this.robotLocations = robotLocations;
+        this.obstacles = obstacles;
+    }
+
+}
+
 class ProblemSet {
 
 
     /**
      * @callback problemSetCallback
-     * @param {Object[]} problemSets
-     * @param {Object[]} problemSets[].robotLocations
-     * @param {Object[]} problemSets[].obstacles
+     * @param {Problem[]} problems
      */
 
     /**
@@ -50,10 +63,7 @@ class ProblemSet {
             obstacles = [];
         }
 
-        problemSets.push({
-            robotLocations,
-            obstacles,
-        });
+        problemSets.push(new Problem(robotLocations, obstacles));
     }
 
     /**

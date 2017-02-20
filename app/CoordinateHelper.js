@@ -1,5 +1,7 @@
 /**
- * Created by timbokz on 20/02/17.
+ * @author Timur Kuzhagaliyev <tim.kuzh@gmail.com>
+ * @copyright 2017
+ * @license MIT
  */
 
 "use strict";
@@ -16,6 +18,40 @@ class Point {
 }
 
 class CoordinateHelper {
+
+    /**
+     * @param {Point} point
+     * @returns {string}
+     */
+    static stringifyPoint(point) {
+        return `(${point.x},${point.y})`;
+    }
+
+    /**
+     *
+     * @param {Point[]} points
+     * @returns {string}
+     */
+    static stringifyPointArray(points) {
+        let pointStrings = [];
+        for(let i = 0; i < points.length; i++) {
+            pointStrings.push(CoordinateHelper.stringifyPoint(points[i]));
+        }
+        return pointStrings.join(',');
+    }
+
+    /**
+     *
+     * @param {Array.<Point[]>} pointsArray2D
+     * @returns {string}
+     */
+    static stringifyPoint2DArray(pointsArray2D) {
+        let pointArrayStrings = [];
+        for(let i = 0; i < pointsArray2D.length; i++) {
+            pointArrayStrings.push(CoordinateHelper.stringifyPointArray(pointsArray2D[i]));
+        }
+        return pointArrayStrings.join(';');
+    }
 
     /**
      * @param {string} pointString

@@ -2,8 +2,13 @@
  * Created by timbokz on 20/02/17.
  */
 
-const ProblemSet = require('./app/ProblemSet');
+"use strict";
 
-ProblemSet.importFromFile('./robots.mat', (problemSets) => {
-    console.log(problemSets[2].obstacles)
+const ProblemSet = require('./app/ProblemSet');
+const Solver = require('./app/Solver');
+
+ProblemSet.importFromFile('./robots.mat', (problems) => {
+    let solver = new Solver(problems);
+    solver.solveAll();
+    solver.exportToFile('./solutions.mat');
 });
