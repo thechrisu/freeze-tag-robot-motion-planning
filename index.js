@@ -5,9 +5,9 @@
 "use strict";
 
 const program = require('commander');
-const ProblemSet = require('./app/ProblemSet');
 const Solver = require('./app/Solver');
 const Viz = require('./app/Visualizer');
+const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
 function solveWrapper(isVisualizing, selected, isSolvingAll) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
@@ -21,7 +21,13 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
             let solutions = solver.getSolutions();
             Viz.Visualizer.visualizeSolutions(solutions);
         }
-        solver.exportToFile('./solutions.mat');
+        solver.exportToFile('./solution.mat');
+    });
+}
+
+function visualizeProblemSolution() {
+    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/bruteforce.mat', (solutions) => {
+        Viz.Visualizer.visualizeSolutions(solutions);
     });
 }
 
@@ -45,10 +51,14 @@ program.command('*')
         '-v | --visualize for visualizations')
     .option("-v, --visualize", "Whether to visualize the problems after solving them")
     .action(function(mode, options) {
-        let selectedProblems = parseProblemArray(mode);
-        let isSolvingAll = mode == "all" || !selectedProblems;
-        let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
-        solveWrapper(isVisualizing, selectedProblems, isSolvingAll);
+        if(mode == "manual") {
+            visualizeProblemSolution();
+        } else {
+            let selectedProblems = parseProblemArray(mode);
+            let isSolvingAll = mode == "all" || !selectedProblems;
+            let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
+            solveWrapper(isVisualizing, selectedProblems, isSolvingAll);
+        }
     });
 
 program.parse(process.argv);

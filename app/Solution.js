@@ -12,15 +12,20 @@ class Solution {
 
     /**
      * @param {Problem} problem
+     * @param robotPaths
      */
-    constructor(problem) {
+    constructor(problem, robotPaths) {
         this.robotLocations = problem.robotLocations;
-        this.obstacles = problem.obstacles;
         this.problemNumber = problem.problemNumber;
-        /**
-         * @type {Array.<Point[]>}
-         */
-        this.robotPaths = [];
+        this.obstacles = problem.obstacles;
+        if(!robotPaths) {
+            /**
+             * @type {Array.<Point[]>}
+             */
+            this.robotPaths = [];
+        } else {
+            this.robotPaths = robotPaths;
+        }
     }
 
     solve() {
@@ -30,7 +35,6 @@ class Solution {
     toString() {
         return CoordinateHelper.stringifyPoint2DArray(this.robotPaths);
     }
-
 }
 
 module.exports = Solution;
