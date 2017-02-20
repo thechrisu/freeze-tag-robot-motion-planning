@@ -88,4 +88,7 @@ class CoordinateHelper {
 
 }
 
-module.exports = CoordinateHelper;
+module.exports = {
+    Point,
+    CoordinateHelper
+};

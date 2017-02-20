@@ -158,11 +158,10 @@ class Visualizer {
     static drawRobotPath(points, ctx, scale) {
         ctx.strokeStyle = Visualizer.getValidColour();
         ctx.beginPath();
-        var fp = Visualizer.getScaledPoint(points[0], scale);
-        ctx.moveTo(fp.x, fp.y);
         ctx.fillStyle = ctx.strokeStyle;
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
+            if (i === 0) ctx.moveTo(sp.x, sp.y);
             ctx.lineTo(sp.x, sp.y);
         }
         ctx.stroke();
@@ -178,10 +177,9 @@ class Visualizer {
     static drawObstacle(points, ctx, scale) {
         ctx.fillStyle = Visualizer.getValidColour();
         ctx.beginPath();
-        var fp = Visualizer.getScaledPoint(points[0], scale);
-        ctx.moveTo(fp.x, fp.y);
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
+            if (i === 0) ctx.moveTo(sp.x, sp.y);
             ctx.lineTo(sp.x, sp.y);
         }
         ctx.closePath();

@@ -24,6 +24,9 @@ class Solver {
 
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
+            if(i === 5) continue;
+            if(i === 7) continue;
+            console.log('Problem: ' + (i + 1));
             let solution = new Solution(this.problems[i]);
             solution.solve();
             this.solvedSolutions.push(solution);
@@ -33,9 +36,16 @@ class Solver {
     solveSelected(problemNumberArray) {
         for (let i = 0; i < problemNumberArray.length; i++) {
             let problemIndex = problemNumberArray[i] - 1;
-            let solution = new Solution(this.problems[problemIndex]);
-            solution.solve();
-            this.solvedSolutions.push(solution);
+            console.log('Problem: ' + (problemIndex + 1));
+            try {
+                let solution = new Solution(this.problems[problemIndex]);
+                solution.solve();
+                this.solvedSolutions.push(solution.getCompressedSolution());
+            } catch (e) {
+
+            } finally {
+                console.log('Problem done: ' + (problemIndex + 1));
+            }
         }
     }
 

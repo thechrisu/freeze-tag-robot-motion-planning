@@ -12,12 +12,12 @@ const Viz = require('./app/Visualizer');
 function solveWrapper(isVisualizing, selected, isSolvingAll) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
         let solver = new Solver(problems);
-        if(isSolvingAll) {
+        if (isSolvingAll) {
             solver.solveAll();
         } else {
             solver.solveSelected(selected);
         }
-        if(isVisualizing) {
+        if (isVisualizing) {
             let solutions = solver.getSolutions();
             Viz.Visualizer.visualizeSolutions(solutions);
         }
@@ -28,8 +28,8 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
 function parseProblemArray(rawProblemString) {
     try {
         let asJson = JSON.parse(rawProblemString);
-        for(let i = 0; i < asJson.length; i++) {
-            if(asJson[i] < 1 || asJson[i] > 30) {
+        for (let i = 0; i < asJson.length; i++) {
+            if (asJson[i] < 1 || asJson[i] > 30) {
                 console.error("Invalid problem number(s) entered");
             }
         }
@@ -44,7 +44,7 @@ program.command('*')
     .description('Our solutions. Sorry for the crappy docstring here. all | [1,2,17] for solving all/selected problems. ' +
         '-v | --visualize for visualizations')
     .option("-v, --visualize", "Whether to visualize the problems after solving them")
-    .action(function(mode, options) {
+    .action(function (mode, options) {
         let selectedProblems = parseProblemArray(mode);
         let isSolvingAll = mode == "all" || !selectedProblems;
         let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
