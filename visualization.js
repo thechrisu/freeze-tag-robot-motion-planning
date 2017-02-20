@@ -35,10 +35,9 @@ solEx = {
 
 const MAX_DRAWING_SIZE = 1000.0;
 const REAL_DRAWING_SIZE = 900.0;
+const DOT_SIZE = 0.05;
 
-var Canvas = require('canvas'),
-    Image = Canvas.Image;
-
+var Canvas = require('canvas');
 var fs = require('fs');
 
 function getScaledPoint(point, scale) {
@@ -48,37 +47,50 @@ function getScaledPoint(point, scale) {
     }
 }
 
-function enterPointsButDontDraw(points, ctx, scale) {
+function drawRobotPath(points, ctx, scale) {
+    do {
+        ctx.strokeStyle = "#" + ((1 << 24) * Math.random() | 2).toString(16);
+    } while (ctx.strokeStyle == "#ffffff" || (ctx.strokeStyle[1] < '8' && ctx.strokeStyle[3] < '8' && ctx.strokeStyle[5] < '8'));
     ctx.beginPath();
     var fp = getScaledPoint(points[0], scale);
     ctx.moveTo(fp.x, fp.y);
-    for(var i = 0; i < points.length; i++) {
+    ctx.fillStyle = ctx.strokeStyle;
+    for (var i = 0; i < points.length; i++) {
         var sp = getScaledPoint(points[i], scale);
+        ctx.fillRect(sp.x - 0.5 * DOT_SIZE * scale.factor, sp.y - 0.5 * DOT_SIZE * scale.factor, DOT_SIZE * scale.factor, DOT_SIZE * scale.factor);
         ctx.lineTo(sp.x, sp.y);
     }
-}
-
-function drawRobotPath(points, ctx, scale) {
-    ctx.strokeStyle = "#"+((1<<24)*Math.random()|0).toString(16);
-    enterPointsButDontDraw(points, ctx, scale);
     ctx.stroke();
 }
 
 function drawObstacle(points, ctx, scale) {
-    ctx.fillStyle = "#"+((1<<24)*Math.random()|0).toString(16);
-    enterPointsButDontDraw(points, ctx, scale);
+    do {
+        ctx.fillStyle = "#" + ((1 << 24) * Math.random() | 2).toString(16);
+    } while (ctx.fillStyle == "#ffffff" || (ctx.fillStyle[1] < '8' && ctx.fillStyle[3] < '8' && ctx.fillStyle[5] < '8'));
+    ctx.beginPath();
+    var fp = getScaledPoint(points[0], scale);
+    ctx.moveTo(fp.x, fp.y);
+    for (var i = 0; i < points.length; i++) {
+        var sp = getScaledPoint(points[i], scale);
+        ctx.lineTo(sp.x, sp.y);
+    }
+    ctx.stroke();
     ctx.closePath();
     ctx.fill();
 }
 
+/**
+ * @param solutionObj
+ * @returns {{x_offset: number, y_offset: number, factor: number, post_offset: number}}
+ */
 function getScale(solutionObj) {
     var raw_max_x = 0.0,
         raw_max_y = 0.0,
         raw_min_x = 0.0,
         raw_min_y = 0.0;
-    for(var i = 0; i < solutionObj.robotLocations.length; i++) {
+    for (var i = 0; i < solutionObj.robotLocations.length; i++) {
         var pts = solutionObj.robotLocations[i];
-        for(var j = 0; j < pts.length; j++) {
+        for (var j = 0; j < pts.length; j++) {
             var pt = pts[j];
             if (pt.x > raw_max_x) {
                 raw_max_x = pt.x;
@@ -94,9 +106,9 @@ function getScale(solutionObj) {
             }
         }
     }
-    for(var i = 0; i < solutionObj.obstacles.length; i++) {
+    for (var i = 0; i < solutionObj.obstacles.length; i++) {
         var pts = solutionObj.obstacles[i];
-        for(var j = 0; j < pts.length; j++) {
+        for (var j = 0; j < pts.length; j++) {
             if (pts.x > raw_max_x) {
                 raw_max_x = pts.x;
             }
@@ -112,11 +124,11 @@ function getScale(solutionObj) {
         }
     }
     var x_diff = raw_max_x - raw_min_x;
-    if(Math.abs(x_diff) == 0.0)
-        x_diff = 600;
+    if (Math.abs(x_diff) == 0.0)
+        x_diff = REAL_DRAWING_SIZE;
     var y_diff = raw_max_y - raw_min_y;
-    if(Math.abs(y_diff) == 0.0)
-        y_diff = 600;
+    if (Math.abs(y_diff) == 0.0)
+        y_diff = REAL_DRAWING_SIZE;
     var larger_diff = 1.0;
     if (x_diff > y_diff) {
         larger_diff = x_diff;
@@ -127,11 +139,15 @@ function getScale(solutionObj) {
     return {
         x_offset: raw_min_x,
         y_offset: raw_min_y,
-        factor: REAL_DRAWING_SIZE/larger_diff,
-        post_offset: (MAX_DRAWING_SIZE - REAL_DRAWING_SIZE)/2.0
+        factor: REAL_DRAWING_SIZE / larger_diff,
+        post_offset: (MAX_DRAWING_SIZE - REAL_DRAWING_SIZE) / 2.0
     };
 }
 
+/**
+ * This is the function you're looking for
+ * @param solutionObj
+ */
 function visualizeSolution(solutionObj) {
     var scale = getScale(solutionObj);
     canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
@@ -140,19 +156,21 @@ function visualizeSolution(solutionObj) {
     ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
     ctx.fillStyle = 'white';
     ctx.fill();
-    for(var i = 0; i < solutionObj.obstacles.length; i++) {
+    ctx.globalAlpha = 0.3;
+    for (var i = 0; i < solutionObj.obstacles.length; i++) {
         drawObstacle(solutionObj.obstacles[i], ctx, scale);
     }
-    for(var i = 0; i < solutionObj.robotLocations.length; i++) {
+    ctx.globalAlpha = 1.0;
+    for (var i = 0; i < solutionObj.robotLocations.length; i++) {
         drawRobotPath(solutionObj.robotLocations[i], ctx, scale);
     }
     var out = fs.createWriteStream(__dirname + '/problem.png');
     var stream = canvas.pngStream();
-    stream.on('data', function(c) {
+    stream.on('data', function (c) {
         out.write(c);
     });
-    stream.on('end', function() {
-       console.log('saved png');
+    stream.on('end', function () {
+        console.log('saved png');
     });
 }
 
