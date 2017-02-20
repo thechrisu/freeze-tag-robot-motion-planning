@@ -19,15 +19,28 @@ class Solver {
      */
     constructor(problems) {
         this.problems = problems;
-        this.solutionStrings = [];
+        this.solvedSolutions = [];
     }
 
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
             let solution = new Solution(this.problems[i]);
             solution.solve();
-            this.solutionStrings.push(solution.toString());
+            this.solvedSolutions.push(solution);
         }
+    }
+
+    solveSelected(problemNumberArray) {
+        for (let i = 0; i < problemNumberArray.length; i++) {
+            let problemIndex = problemNumberArray[i] - 1;
+            let solution = new Solution(this.problems[problemIndex]);
+            solution.solve();
+            this.solvedSolutions.push(solution);
+        }
+    }
+
+    getSolutions() {
+        return this.solvedSolutions;
     }
 
     /**
@@ -35,8 +48,8 @@ class Solver {
      */
     exportToFile(filePath) {
         let output = [GROUP_NAME, GROUP_PASS, ''].join('\n');
-        for (let i = 0; i < this.solutionStrings.length; i++) {
-            output += (i + 1) + ': ' + this.solutionStrings[i] + '\n';
+        for (let i = 0; i < this.solvedSolutions.length; i++) {
+            output += this.solvedSolutions[i].problemNumber + ': ' + this.solvedSolutions[i].toString() + '\n';
         }
         fs.writeFileSync(filePath, output);
     }

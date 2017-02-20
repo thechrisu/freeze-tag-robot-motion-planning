@@ -12,24 +12,29 @@ class Solution {
 
     /**
      * @param {Problem} problem
+     * @param robotPaths
      */
-    constructor(problem) {
+    constructor(problem, robotPaths) {
         this.robotLocations = problem.robotLocations;
+        this.problemNumber = problem.problemNumber;
         this.obstacles = problem.obstacles;
-        /**
-         * @type {Array.<Point[]>}
-         */
-        this.robotPaths = [];
+        if(!robotPaths) {
+            /**
+             * @type {Array.<Point[]>}
+             */
+            this.robotPaths = [];
+        } else {
+            this.robotPaths = robotPaths;
+        }
     }
 
     solve() {
-        // TODO: Add solution
+        this.robotPaths.push(this.robotLocations);
     }
 
     toString() {
         return CoordinateHelper.stringifyPoint2DArray(this.robotPaths);
     }
-
 }
 
 module.exports = Solution;
