@@ -11,7 +11,7 @@ solEx = {
             },
             {
                 x: 6.6,
-                y: 30.2
+                y: 10.2
             }
         ]
     ],
@@ -33,6 +33,9 @@ solEx = {
     ]
 };
 
+const MAX_DRAWING_SIZE = 1000.0;
+const REAL_DRAWING_SIZE = 900.0;
+
 var Canvas = require('canvas'),
     Image = Canvas.Image;
 
@@ -40,8 +43,8 @@ var fs = require('fs');
 
 function getScaledPoint(point, scale) {
     return {
-        x: ((point.x - scale.x_offset) * scale.x_scale),
-        y: ((point.y - scale.y_offset) * scale.y_scale)
+        x: ((point.x - scale.x_offset) * scale.factor) + scale.post_offset,
+        y: ((point.y - scale.y_offset) * scale.factor) + scale.post_offset
     }
 }
 
@@ -114,27 +117,34 @@ function getScale(solutionObj) {
     var y_diff = raw_max_y - raw_min_y;
     if(Math.abs(y_diff) == 0.0)
         y_diff = 600;
+    var larger_diff = 1.0;
+    if (x_diff > y_diff) {
+        larger_diff = x_diff;
+    } else {
+        larger_diff = y_diff;
+    }
+
     return {
         x_offset: raw_min_x,
         y_offset: raw_min_y,
-        x_scale: 600/x_diff,
-        y_scale: 600/y_diff
+        factor: REAL_DRAWING_SIZE/larger_diff,
+        post_offset: (MAX_DRAWING_SIZE - REAL_DRAWING_SIZE)/2.0
     };
 }
 
 function visualizeSolution(solutionObj) {
     var scale = getScale(solutionObj);
-    canvas = new Canvas(600, 600);
+    canvas = new Canvas(MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
     ctx = canvas.getContext('2d');
     ctx.beginPath();
-    ctx.rect(0, 0, 600, 600);
+    ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
     ctx.fillStyle = 'white';
     ctx.fill();
-    for(var i = 0; i < solutionObj.robotLocations.length; i++) {
-        drawRobotPath(solutionObj.robotLocations[i], ctx, scale);
-    }
     for(var i = 0; i < solutionObj.obstacles.length; i++) {
         drawObstacle(solutionObj.obstacles[i], ctx, scale);
+    }
+    for(var i = 0; i < solutionObj.robotLocations.length; i++) {
+        drawRobotPath(solutionObj.robotLocations[i], ctx, scale);
     }
     var out = fs.createWriteStream(__dirname + '/problem.png');
     var stream = canvas.pngStream();
