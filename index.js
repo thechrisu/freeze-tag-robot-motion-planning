@@ -12,7 +12,6 @@ const Viz = require('./app/Visualizer');
 function solveWrapper(isVisualizing, selected, isSolvingAll) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
         let solver = new Solver(problems);
-        console.log(selected);
         if(isSolvingAll) {
             solver.solveAll();
         } else {
@@ -45,12 +44,9 @@ program.command('*')
     .description('Our solutions')
     .option("-v, --visualize", "Whether to visualize the problems after solving them")
     .action(function(mode, options) {
-        let isSolvingAll = mode == "all";
-        let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
         let selectedProblems = parseProblemArray(mode);
-        if(!isSolvingAll && !selectedProblems) {
-            console.error("Please provide valid problem numbers");
-        }
+        let isSolvingAll = mode == "all" || !selectedProblems;
+        let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
         solveWrapper(isVisualizing, selectedProblems, isSolvingAll);
     });
 
