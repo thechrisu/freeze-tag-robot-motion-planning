@@ -23,7 +23,7 @@ class Solution {
     }
 
     solve() {
-        // TODO: Add solution
+        this.robotPaths.push(this.robotLocations);
     }
 
     toString() {
