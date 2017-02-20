@@ -6,6 +6,7 @@
 
 const program = require('commander');
 const Solver = require('./app/Solver');
+const ProblemSet = require('./app/ProblemSet');
 const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 

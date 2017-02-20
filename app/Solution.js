@@ -32,6 +32,25 @@ class Solution {
         this.robotPaths.push(this.robotLocations);
     }
 
+    print() {
+        let s = "";
+        for(let i = 0; i < this.robotPaths.length; i++) {
+            let robotPath = this.robotPaths[i];
+            for(let j = 0; j < robotPath.length; j++) {
+                s += '(' + robotPath[j].x + ',' + robotPath[j].y + ')';
+                if(j != robotPath.length - 1) {
+                    s += ',';
+                } else {
+                    s += ';';
+                }
+            }
+        }
+        if(s[s.length - 1] == ";") {
+            s = s.substr(0, s.length - 1);
+        }
+        console.log(this.problemNumber + ': ' + s);
+    }
+
     toString() {
         return CoordinateHelper.stringifyPoint2DArray(this.robotPaths);
     }
