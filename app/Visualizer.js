@@ -68,16 +68,18 @@ class Visualizer {
 
     /**
      * Please programming gods, forgive me
-     * @param solutionObj
      * @returns {{x_offset: number, y_offset: number, factor: number, post_offset: number}}
+     * @param robotPaths
+     * @param robotLocations
+     * @param obstacles
      */
-    static getScale(solutionObj) {
+    static getScale(robotPaths, robotLocations, obstacles) {
         var raw_max_x = 0.0,
             raw_max_y = 0.0,
             raw_min_x = 0.0,
             raw_min_y = 0.0;
-        for (var i = 0; i < solutionObj.robotPaths.length; i++) {
-            var pts = solutionObj.robotPaths[i];
+        for (var i = 0; i < robotPaths.length; i++) {
+            var pts = robotPaths[i];
             for (var j = 0; j < pts.length; j++) {
                 var pt = pts[j];
                 if (pt.x > raw_max_x) {
@@ -94,8 +96,8 @@ class Visualizer {
                 }
             }
         }
-        for (var i = 0; i < solutionObj.robotLocations.length; i++) {
-            var pt = solutionObj.robotLocations[i];
+        for (var i = 0; i < robotLocations.length; i++) {
+            var pt = robotLocations[i];
             if (pt.x > raw_max_x) {
                 raw_max_x = pt.x;
             }
@@ -109,8 +111,8 @@ class Visualizer {
                 raw_min_y = pt.y;
             }
         }
-        for (var i = 0; i < solutionObj.obstacles.length; i++) {
-            var pts = solutionObj.obstacles[i];
+        for (var i = 0; i < obstacles.length; i++) {
+            var pts = obstacles[i];
             for (var j = 0; j < pts.length; j++) {
                 var pt = pts[j];
                 if (pt.x > raw_max_x) {
@@ -213,11 +215,7 @@ class Visualizer {
         });
     }
 
-    /**
-     * This is the function you're looking for
-     */
-    static visualizeSolution(solutionObj, filename) {
-        var scale = Visualizer.getScale(solutionObj);
+    static setupCanvas(scale) {
         var buffer = MAX_DRAWING_SIZE - REAL_DRAWING_SIZE;
         var x_size = buffer + REAL_DRAWING_SIZE * scale.x_scale;
         var y_size = buffer + REAL_DRAWING_SIZE * scale.y_scale;
@@ -227,11 +225,31 @@ class Visualizer {
         ctx.fillStyle = 'white';
         ctx.rect(0, 0, x_size, y_size);
         ctx.fill();
-        //ctx.rect(0, 0, MAX_DRAWING_SIZE, MAX_DRAWING_SIZE);
+        return {canvas: canvas, ctx: ctx};
+    }
+
+    /**
+     * This is the function you're looking for
+     */
+    static visualizeSolution(solutionObj, filename) {
+        var scale = Visualizer.getScale(solutionObj.robotPaths, solutionObj.robotLocations, solutionObj.obstacles);
+        let cv = this.setupCanvas(scale);
+        var canvas = cv.canvas; //Hacky due to canvas :(
+        var ctx = cv.ctx;
         Visualizer.drawRobotLocations(solutionObj.robotLocations, ctx, scale);
         Visualizer.drawObstacles(solutionObj.obstacles, ctx, scale);
         Visualizer.drawRobotPaths(solutionObj.robotPaths, ctx, scale);
         Visualizer.saveAsFile(filename, canvas);
+    }
+
+    static visualizeObstacles(solutionObj, filename) {
+        var scale = Visualizer.getScale([], [], solutionObj.obstacles);
+        let cv = this.setupCanvas(scale);
+        var canvas = cv.canvas; //Hacky due to canvas :(
+        var ctx = cv.ctx;
+        Visualizer.drawObstacles(solutionObj.obstacles, ctx, scale);
+        Visualizer.saveAsFile(filename, canvas);
+
     }
 
     static visualizeSolutions(solutions) {
