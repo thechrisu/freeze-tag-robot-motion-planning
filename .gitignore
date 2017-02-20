@@ -1,3 +1,15 @@
+# Solutions
+solutions.mat
+
+# JetBrains IDE files
+.idea
+
+# Vim .swp files
+*.swp
+
+# Typings directory
+/typings/
+
 # Logs
 logs
 *.log
