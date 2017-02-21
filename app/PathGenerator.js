@@ -12,7 +12,6 @@ const Canvas = require('canvas');
 const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
-const AsyncLock = require('async-lock');
 
 const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 3;
@@ -53,7 +52,6 @@ class PathGenerator {
     constructor(problem) {
         this.problem = problem;
         this.jobCount = 1;
-        this.lock = new AsyncLock();
         this.calculateProblemSize();
     }
 
@@ -176,19 +174,18 @@ class PathGenerator {
             thread.on('message', (data) => {
                 let k = i;
                 this.threadLoad[k] = this.threadLoad[k] - 1;
-                this.lock.acquire(this.jobCount, (done) => {
-                    clearTimeout(this.t1);
-                    if(this.jobCount < 700) {
-                        console.log('job count: ' + this.jobCount);
-                    }
-                    this.registerPath(data);
-                    this.t1 = setTimeout(() => {
-                        console.log('Too much time elapsed that no job has been completed --> exiting');
-                        this.jobCount = 0;
-                        this.jobCount = 0;
-                    }, 1000);
-                    done();
-                });
+                clearTimeout(this.t1);
+                if(this.jobCount < 700) {
+                    console.log('job count: ' + this.jobCount);
+                }
+                this.registerPath(data);
+                this.t1 = setTimeout(() => {
+                    console.log('Too much time elapsed that no job has been completed --> exiting');
+                    this.jobCount = 0;
+                    this.jobCount = 0;
+                    this.killThreads();
+                    this.callback(this.paths);
+                }, 1000);
             });
             thread.on('exit', (data) => {
                 if(data) {
