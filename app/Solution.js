@@ -6,7 +6,7 @@
 
 "use strict";
 
-const _ = require('underscore');
+const deasync = require('deasync');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
@@ -45,30 +45,41 @@ class Solution {
     }
 
     solve() {
-        let generator = new PathGenerator(this.problem);
+
         console.log('> Calculating available paths for #' + this.problem.problemNumber + '...');
         console.time('> problem-' + this.problem.problemNumber + '-paths');
-        if(!this.paths) {
-            this.paths = generator.calculatePaths();
-        }
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
-        this.awakeRobots = [0];
-        this.sleepingRobots = [];
-        let robotCount = this.problem.robotLocations.length;
-        for (let i = 1; i < robotCount; i++) {
-            this.sleepingRobots.push(i);
-        }
-        this.currentLocations = {0: 0};
-        this.currentPaths = {0: []};
-        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
-        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
-        this.calculateRobotPaths();
-        for(let i = 0; i < robotCount; i++) {
-            if(this.currentPaths[i] !== undefined) {
-                this.robotPaths.push(this.currentPaths[i]);
+        this.complete = false;
+        let generator = new PathGenerator(this.problem);
+        generator.calculatePaths((paths) => {
+            //TODO: Re-do checking whether path is there
+
+            this.paths = paths;
+            console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
+            this.awakeRobots = [0];
+            this.sleepingRobots = [];
+            let robotCount = this.problem.robotLocations.length;
+            for (let i = 1; i < robotCount; i++) {
+                this.sleepingRobots.push(i);
             }
+            this.currentLocations = {0: 0};
+            this.currentPaths = {0: []};
+            console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+            console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
+            this.awakeRobotCount = 1;
+            while(this.awakeRobotCount < robotCount) {
+                this.calculateRobotPaths();
+            }
+            for(let i = 0; i < robotCount; i++) {
+                if(this.currentPaths[i] !== undefined) {
+                    this.robotPaths.push(this.currentPaths[i]);
+                }
+            }
+            console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
+            this.complete = true;
+        });
+        while(!this.complete) {
+            deasync.runLoopOnce();
         }
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
     }
 
     logPath(path) {
@@ -107,6 +118,11 @@ class Solution {
         let busyRobots = [];
         let optionCount = options.length;
 
+        if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
+            console.error('No solution!');
+            process.exit(1);
+        }
+
         for (let i = 0; i < optionCount; i++) {
             let option = options[i];
             if (awokenRobots.indexOf(option.sleeper) !== -1 || busyRobots.indexOf(option.worker) !== -1) continue;
@@ -117,10 +133,8 @@ class Solution {
             this.currentLocations[option.sleeper] = option.sleeper;
             this.currentLocations[option.worker] = option.sleeper;
             this.appendPath(option.worker, option.points);
+            this.awakeRobotCount++;
         }
-
-        this.calculateRobotPaths();
-
     }
 
     appendPath(robot, path) {
