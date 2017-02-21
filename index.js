@@ -38,7 +38,6 @@ function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, i
             ProblemSolutionSynthesizer.exportPaths(PATHS_FILE, solutions);
         }
         solver.exportToFile(SOLUTION_FILE);
-        process.exit(0);
     });
 }
 

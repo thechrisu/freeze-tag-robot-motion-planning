@@ -51,6 +51,7 @@ class Solution {
         this.complete = false;
         let generator = new PathGenerator(this.problem);
         generator.calculatePaths((paths) => {
+            console.log('> Found available paths for #' + this.problem.problemNumber + '!');
             //TODO: Re-do checking whether path is there
             this.paths = paths;
             console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
@@ -100,7 +101,7 @@ class Solution {
             let location = this.currentLocations[awakeRobot];
             for (let k = 0; k < sleepingRobotCount; k++) {
                 let sleepingRobot = this.sleepingRobots[k];
-                if(this.paths[location][sleepingRobot]) {
+                if(this.paths[location] && this.paths[location][sleepingRobot]) {
                     options.push({
                         points: this.paths[location][sleepingRobot].points,
                         cost: this.paths[location][sleepingRobot].cost,
@@ -118,8 +119,10 @@ class Solution {
         let optionCount = options.length;
 
         if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
-            console.error('No solution!');
-            process.exit(1);
+            console.error('No solution! Dumping results as-is.');
+            this.awakeRobots = this.problem.robotLocations.length;
+            return;
+            //process.exit(1);
         }
 
         for (let i = 0; i < optionCount; i++) {

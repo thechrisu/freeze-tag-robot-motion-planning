@@ -14,7 +14,7 @@ const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 3;
+const CELLS_PER_UNIT = 5;
 
 class Path {
 
@@ -100,13 +100,13 @@ class PathGenerator {
         this.callback = callback;
         this.paths = {};
         this.jobCount = 0;
-        this.t1 = undefined;
         this.prepareThreads();
         console.log('--> Preparing grid matrix...');
         let gridMatrix = this.generateGridMatrix(this.problem.obstacles);
         console.log('--> Grid matrix ready!');
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
+        console.log('--> Adding jobs...');
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
             for (let endRobot = 0; endRobot < robotCount; endRobot++) {
 
@@ -121,7 +121,6 @@ class PathGenerator {
                 processedPaths[startRobot][endRobot] = true;
                 processedPaths[endRobot][startRobot] = true;
 
-
                 let dataObject = {
                     startRobot,
                     endRobot,
@@ -130,15 +129,10 @@ class PathGenerator {
                     gridMatrix,
                 };
                 this.calculateUsingThread(dataObject);
-                //this.calculatePath(grid.clone(), finder, startRobot, endRobot);
+
             }
         }
-        this.t1 = setTimeout(() => {
-            console.log('Too much time elapsed that no job has been completed --> exiting');
-            this.jobCount = 0;
-            this.jobCount = 0;
-        }, 1000);
-        console.log('done adding jobs!');
+        console.log('--> Added all jobs!');
     }
 
     calculateUsingThread(data) {
@@ -157,7 +151,6 @@ class PathGenerator {
                 threadIndex = i;
             }
         }
-        i -= 1;
         this.threadLoad[threadIndex] = this.threadLoad[threadIndex] + 1;
         return this.threads[threadIndex];
     }
@@ -165,27 +158,14 @@ class PathGenerator {
     prepareThreads() {
         this.threadLoad = [];
         this.threads = [];
-        if(this.jobCount < 700) {
-            console.log('job count: ' + this.jobCount);
-        }
         for (let i = 0; i < CPUCount; i++) {
             this.threadLoad.push(0);
             let thread = childProcess.fork(path.join(__dirname, THREAD_FILE));
             thread.on('message', (data) => {
                 let k = i;
                 this.threadLoad[k] = this.threadLoad[k] - 1;
-                clearTimeout(this.t1);
-                if(this.jobCount < 700) {
-                    console.log('job count: ' + this.jobCount);
-                }
+                this.jobCount--;
                 this.registerPath(data);
-                this.t1 = setTimeout(() => {
-                    console.log('Too much time elapsed that no job has been completed --> exiting');
-                    this.jobCount = 0;
-                    this.jobCount = 0;
-                    this.killThreads();
-                    this.callback(this.paths);
-                }, 1000);
             });
             thread.on('exit', (data) => {
                 if(data) {
@@ -203,29 +183,31 @@ class PathGenerator {
     }
 
     registerPath(data) {
-        if (!data.success) return;
 
-        let startRobot = data.startRobot;
-        let endRobot = data.endRobot;
-        let path = data.path;
+        if (data.success) {
 
-        let pointPath = this.convertPathToOriginalScalePoints(path);
+            let startRobot = data.startRobot;
+            let endRobot = data.endRobot;
+            let path = data.path;
 
-        let pathLength = PF.Util.pathLength(path);
-        let pointCount = pointPath.length;
+            let pointPath = this.convertPathToOriginalScalePoints(path);
 
-        pointPath[0].x = this.problem.robotLocations[startRobot].x;
-        pointPath[0].y = this.problem.robotLocations[startRobot].y;
-        pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
-        pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
+            let pathLength = PF.Util.pathLength(path);
+            let pointCount = pointPath.length;
 
-        if (this.paths[startRobot] === undefined) this.paths[startRobot] = {};
-        if (this.paths[endRobot] === undefined) this.paths[endRobot] = {};
-        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength);
-        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
+            pointPath[0].x = this.problem.robotLocations[startRobot].x;
+            pointPath[0].y = this.problem.robotLocations[startRobot].y;
+            pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
+            pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
 
-        this.jobCount--;
-        if (this.jobCount === 0 || this.jobCount < 0) {
+            if (this.paths[startRobot] === undefined) this.paths[startRobot] = {};
+            if (this.paths[endRobot] === undefined) this.paths[endRobot] = {};
+            this.paths[startRobot][endRobot] = new Path(pointPath, pathLength, startRobot, endRobot);
+            this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
+
+        }
+
+        if (this.jobCount <= 0) {
             this.killThreads();
             this.callback(this.paths);
         }
@@ -294,7 +276,7 @@ class PathGenerator {
         for (let y = 0; y < height; y++) {
             let row = [];
             for (let x = 0; x < width; x++) {
-                let walkable = !context || context.getImageData(x, y, 1, 1).data['3'] < 10;
+                let walkable = !context || context.getImageData(x, y, 1, 1).data['3'] < 5;
                 row.push(walkable ? 0 : 1);
             }
             matrix.push(row);
@@ -324,6 +306,8 @@ class PathGenerator {
      */
     drawObstacle(context, obstacle) {
         context.fillStyle = '#000';
+        context.strokeStyle = '#000';
+        context.lineWidth   = 2;
         context.beginPath();
         let pointCount = obstacle.length;
         for (let i = 0; i < pointCount; i++) {
