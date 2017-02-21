@@ -16,41 +16,54 @@ class Solver {
 
     /**
      * @param {Problem[]} problems
+     * @param solutions_with_skipped_first_part_dict
      */
-    constructor(problems) {
+    constructor(problems, solutions_with_skipped_first_part_dict) {
         this.problems = problems;
         this.solvedSolutions = [];
+        if(solutions_with_skipped_first_part_dict) {
+            this.solutions_with_skipped_first_part_dict = solutions_with_skipped_first_part_dict;
+        }
+    }
+
+    solveConcurrently(solution) {
+        /*
+         solution.print(); //you're gonna thank me later for that
+         solution.save();
+         this.solvedSolutions.push(solution);
+         */
     }
 
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
-            if(i === 5) continue;
-            if(i === 7) continue;
-            console.log('Problem: ' + (i + 1));
-            let solution = new Solution(this.problems[i]);
-            solution.solve();
-            solution.print(); //you're gonna thank me later for that
-            this.solvedSolutions.push(solution);
+            this.solve(i);
         }
     }
 
     solveSelected(problemNumberArray) {
         for (let i = 0; i < problemNumberArray.length; i++) {
             let problemIndex = problemNumberArray[i] - 1;
-            let solution = new Solution(this.problems[problemIndex]);
-            solution.solve();
-            solution.print(); //you're gonna thank me later for that
-            this.solvedSolutions.push(solution);
-            console.log('Problem: ' + (problemIndex + 1));
-            try {
-                let solution = new Solution(this.problems[problemIndex]);
-                solution.solve();
-                this.solvedSolutions.push(solution.getCompressedSolution());
-            } catch (e) {
+            this.solve(problemIndex);
+        }
+    }
 
-            } finally {
-                console.log('Problem done: ' + (problemIndex + 1));
+    solve(problemIndex) {
+        console.log('Problem: ' + (problemIndex + 1));
+        try {
+            let solution = undefined;
+            if(this.solutions_with_skipped_first_part_dict) {
+
+                solution = this.solutions_with_skipped_first_part_dict[problemIndex + 1]; //we store problem num
+            } else {
+                solution = new Solution(this.problems[problemIndex]);
             }
+            solution.solve();
+            this.solvedSolutions.push(solution.getCompressedSolution());
+        } catch (e) {
+            console.error(e);
+            console.error(e.stack);
+        } finally {
+            console.log('Problem done: ' + (problemIndex + 1));
         }
     }
 
