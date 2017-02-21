@@ -265,7 +265,13 @@ class Visualizer {
         let cv = this.setupCanvas(scale);
         var canvas = cv.canvas; //Hacky due to canvas :(
         var ctx = cv.ctx;
-        Visualizer.drawRobotLocations(solutionObj.problem.robotLocations, ctx, scale, true);
+        let black_robots_to_draw = [];
+        if(!solutionObj.awakeRobots) {
+            black_robots_to_draw = solutionObj.problem.robotLocations;
+        } else {
+            black_robots_to_draw = solutionObj.awakeRobots;
+        }
+        Visualizer.drawRobotLocations(black_robots_to_draw, ctx, scale, true);
         let asleepRobots = Visualizer.getAsleepRobots(solutionObj.problem.robotLocations, solutionObj.awakeRobots);
         if(asleepRobots.length > 0) {
             Visualizer.drawRobotLocations(asleepRobots, ctx, scale, false);
