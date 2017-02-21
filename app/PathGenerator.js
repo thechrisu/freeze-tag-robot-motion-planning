@@ -132,6 +132,7 @@ class PathGenerator {
                 //this.calculatePath(grid.clone(), finder, startRobot, endRobot);
             }
         }
+        console.log('done adding jobs!');
     }
 
     calculateUsingThread(data) {
@@ -166,6 +167,9 @@ class PathGenerator {
                 this.threadLoad[k] = this.threadLoad[k] - 1;
                 this.registerPath(data);
             });
+            thread.stderr.on('data', (data) => {
+                console.error(data);
+            });
             this.threads.push(thread);
         }
     }
@@ -199,7 +203,7 @@ class PathGenerator {
         this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
 
         this.jobCount--;
-        if(this.jobCount < 100) {
+        if(this.jobCount < 1000) {
             console.log('job count: ' + this.jobCount);
         }
         if (this.jobCount === 0) {
