@@ -9,7 +9,7 @@ const path = require('path');
 const readline = require('readline');
 const ProblemSet = require('../app/ProblemSet');
 const Solution = require('../app/Solution');
-const CoordinateHelper = require('../app/CoordinateHelper');
+const CoordinateHelper = require('../app/CoordinateHelper').CoordinateHelper;
 
 class ProblemSolutionSynthesizer {
 

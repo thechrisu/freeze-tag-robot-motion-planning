@@ -6,18 +6,19 @@
 
 const program = require('commander');
 const Solver = require('./app/Solver');
+const ProblemSet = require('./app/ProblemSet');
 const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
 function solveWrapper(isVisualizing, selected, isSolvingAll) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
         let solver = new Solver(problems);
-        if(isSolvingAll) {
+        if (isSolvingAll) {
             solver.solveAll();
         } else {
             solver.solveSelected(selected);
         }
-        if(isVisualizing) {
+        if (isVisualizing) {
             let solutions = solver.getSolutions();
             Viz.Visualizer.visualizeSolutions(solutions);
         }
@@ -26,7 +27,7 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
 }
 
 function visualizeProblemSolution() {
-    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/bruteforce.mat', (solutions) => {
+    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/best.mat', (solutions) => {
         Viz.Visualizer.visualizeSolutions(solutions);
     });
 }
@@ -34,8 +35,8 @@ function visualizeProblemSolution() {
 function parseProblemArray(rawProblemString) {
     try {
         let asJson = JSON.parse(rawProblemString);
-        for(let i = 0; i < asJson.length; i++) {
-            if(asJson[i] < 1 || asJson[i] > 30) {
+        for (let i = 0; i < asJson.length; i++) {
+            if (asJson[i] < 1 || asJson[i] > 30) {
                 console.error("Invalid problem number(s) entered");
             }
         }

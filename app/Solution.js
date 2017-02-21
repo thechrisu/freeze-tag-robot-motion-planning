@@ -6,7 +6,9 @@
 
 "use strict";
 
-const CoordinateHelper = require('./CoordinateHelper');
+const _ = require('underscore');
+const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
+const PathGenerator = require('./PathGenerator');
 
 class Solution {
 
@@ -15,9 +17,7 @@ class Solution {
      * @param robotPaths
      */
     constructor(problem, robotPaths) {
-        this.robotLocations = problem.robotLocations;
-        this.problemNumber = problem.problemNumber;
-        this.obstacles = problem.obstacles;
+        this.problem = problem;
         if(!robotPaths) {
             /**
              * @type {Array.<Point[]>}
@@ -28,8 +28,128 @@ class Solution {
         }
     }
 
+    /**
+     * @deprecated
+     */
+    getCompressedSolution() {
+        return {
+            robotLocations: this.problem.robotLocations,
+            obstacles: this.problem.obstacles,
+            problemNumber: this.problemNumber,
+            robotPaths: this.robotPaths,
+            toString: this.toString
+        }
+    }
+
     solve() {
-        this.robotPaths.push(this.robotLocations);
+        let generator = new PathGenerator(this.problem);
+        this.paths = generator.calculatePaths();
+        this.awakeRobots = [0];
+        this.sleepingRobots = [];
+        let robotCount = this.problem.robotLocations.length;
+        for (let i = 1; i < robotCount; i++) {
+            this.sleepingRobots.push(i);
+        }
+        this.currentLocations = {0: 0};
+        this.currentPaths = {0: []};
+        this.calculateRobotPaths();
+        for(let i = 0; i < robotCount; i++) {
+            if(this.currentPaths[i] !== undefined) {
+                this.robotPaths.push(this.currentPaths[i]);
+            } else {
+                //this.robotPaths.push([]);
+            }
+        }
+    }
+
+    logPath(path) {
+        console.log('Path:');
+        for(let i = 0; i < path.length; i++) {
+            console.log(path[i].x.toFixed(2), path[i].y.toFixed(2))
+        }
+    }
+
+    calculateRobotPaths() {
+        let sleepingRobotCount = this.sleepingRobots.length;
+        if (sleepingRobotCount === 0) return;
+        let awakeRobotCount = this.awakeRobots.length;
+
+        let options = [];
+
+        for (let i = 0; i < awakeRobotCount; i++) {
+            let awakeRobot = this.awakeRobots[i];
+            let location = this.currentLocations[awakeRobot];
+            for (let k = 0; k < sleepingRobotCount; k++) {
+                let sleepingRobot = this.sleepingRobots[k];
+                if(this.paths[location][sleepingRobot]) {
+                    options.push({
+                        points: this.paths[location][sleepingRobot].points,
+                        cost: this.paths[location][sleepingRobot].cost,
+                        worker: awakeRobot,
+                        sleeper: sleepingRobot,
+                    });
+                }
+            }
+        }
+
+        _.sortBy(options, (option) => option.cost);
+
+        let awokenRobots = [];
+        let busyRobots = [];
+        let optionCount = options.length;
+
+        for (let i = 0; i < optionCount; i++) {
+            let option = options[i];
+            if (awokenRobots.indexOf(option.sleeper) !== -1 || busyRobots.indexOf(option.worker) !== -1) continue;
+            awokenRobots.push(option.sleeper);
+            busyRobots.push(option.worker);
+            this.awakeRobots.push(option.sleeper);
+            Solution.removeElementFromArray(this.sleepingRobots, option.sleeper);
+            this.currentLocations[option.sleeper] = option.sleeper;
+            this.currentLocations[option.worker] = option.sleeper;
+            this.appendPath(option.worker, option.points);
+        }
+
+        this.calculateRobotPaths();
+
+    }
+
+    appendPath(robot, path) {
+        if (this.currentPaths[robot] === undefined) this.currentPaths[robot] = [];
+        if (this.currentPaths[robot].length > 0) {
+            let lastPoint = this.currentPaths[robot][this.currentPaths[robot].length - 1];
+            if(lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
+                this.currentPaths[robot] = this.currentPaths[robot].concat(path.slice(1));
+                return;
+            }
+        }
+        this.currentPaths[robot] = this.currentPaths[robot].concat(path)
+    }
+
+    static removeElementFromArray(array, element) {
+        let i = array.indexOf(element);
+        if (i != -1) {
+            array.splice(i, 1);
+        }
+    }
+
+    print() {
+        let s = "";
+        for(let i = 0; i < this.robotPaths.length; i++) {
+            let robotPath = this.robotPaths[i];
+            for(let j = 0; j < robotPath.length; j++) {
+                s += '(' + robotPath[j].x + ',' + robotPath[j].y + ')';
+                if(j != robotPath.length - 1) {
+                    s += ',';
+                } else {
+                    s += ';';
+                }
+            }
+        }
+        if(s[s.length - 1] == ";") {
+            s = s.substr(0, s.length - 1);
+        }
+        console.log(this.problem.problemNumber + ': ' + s);
     }
 
     toString() {

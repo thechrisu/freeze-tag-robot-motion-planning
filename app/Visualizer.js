@@ -158,11 +158,10 @@ class Visualizer {
     static drawRobotPath(points, ctx, scale) {
         ctx.strokeStyle = Visualizer.getValidColour();
         ctx.beginPath();
-        var fp = Visualizer.getScaledPoint(points[0], scale);
-        ctx.moveTo(fp.x, fp.y);
         ctx.fillStyle = ctx.strokeStyle;
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
+            if (i === 0) ctx.moveTo(sp.x, sp.y);
             ctx.lineTo(sp.x, sp.y);
         }
         ctx.stroke();
@@ -178,10 +177,9 @@ class Visualizer {
     static drawObstacle(points, ctx, scale) {
         ctx.fillStyle = Visualizer.getValidColour();
         ctx.beginPath();
-        var fp = Visualizer.getScaledPoint(points[0], scale);
-        ctx.moveTo(fp.x, fp.y);
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
+            if (i === 0) ctx.moveTo(sp.x, sp.y);
             ctx.lineTo(sp.x, sp.y);
         }
         ctx.closePath();
@@ -232,29 +230,30 @@ class Visualizer {
      * This is the function you're looking for
      */
     static visualizeSolution(solutionObj, filename) {
-        var scale = Visualizer.getScale(solutionObj.robotPaths, solutionObj.robotLocations, solutionObj.obstacles);
+        var scale = Visualizer.getScale(solutionObj.robotPaths, solutionObj.problem.robotLocations,
+            solutionObj.problem.obstacles);
         let cv = this.setupCanvas(scale);
         var canvas = cv.canvas; //Hacky due to canvas :(
         var ctx = cv.ctx;
-        Visualizer.drawRobotLocations(solutionObj.robotLocations, ctx, scale);
-        Visualizer.drawObstacles(solutionObj.obstacles, ctx, scale);
+        Visualizer.drawRobotLocations(solutionObj.problem.robotLocations, ctx, scale);
+        Visualizer.drawObstacles(solutionObj.problem.obstacles, ctx, scale);
         Visualizer.drawRobotPaths(solutionObj.robotPaths, ctx, scale);
         Visualizer.saveAsFile(filename, canvas);
     }
 
     static visualizeObstacles(solutionObj, filename) {
-        var scale = Visualizer.getScale([], [], solutionObj.obstacles);
+        var scale = Visualizer.getScale([], [], solutionObj.problem.obstacles);
         let cv = this.setupCanvas(scale);
         var canvas = cv.canvas; //Hacky due to canvas :(
         var ctx = cv.ctx;
-        Visualizer.drawObstacles(solutionObj.obstacles, ctx, scale);
+        Visualizer.drawObstacles(solutionObj.problem.obstacles, ctx, scale);
         Visualizer.saveAsFile(filename, canvas);
 
     }
 
     static visualizeSolutions(solutions) {
         for (let i = 0; i < solutions.length; i++) {
-            this.visualizeSolution(solutions[i], 'problem' + solutions[i].problemNumber);
+            this.visualizeSolution(solutions[i], 'problem' + solutions[i].problem.problemNumber);
         }
     }
 }

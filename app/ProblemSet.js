@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const CoordinateHelper = require('./CoordinateHelper');
+const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 
 class Problem {
 
