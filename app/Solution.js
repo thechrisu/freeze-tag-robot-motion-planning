@@ -52,7 +52,6 @@ class Solution {
         let generator = new PathGenerator(this.problem);
         generator.calculatePaths((paths) => {
             //TODO: Re-do checking whether path is there
-
             this.paths = paths;
             console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
             this.awakeRobots = [0];

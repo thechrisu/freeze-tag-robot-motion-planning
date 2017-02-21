@@ -199,7 +199,9 @@ class PathGenerator {
         this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
 
         this.jobCount--;
-
+        if(this.jobCount < 100) {
+            console.log('job count: ' + this.jobCount);
+        }
         if (this.jobCount === 0) {
             this.killThreads();
             this.callback(this.paths);
