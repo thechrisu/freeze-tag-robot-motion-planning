@@ -195,13 +195,13 @@ class Visualizer {
     }
 
     static drawRobotLocations(points, ctx, scale, isAwake) {
-        if(!isAwake) {
+        if(isAwake) {
             ctx.fillStyle = 'black';
         } else {
             ctx.fillStyle = 'red';
         }
         let f = 1.0;
-        if(isAwake) {
+        if(!isAwake) {
             f = 1.4;
         }
         for (var i = 0; i < points.length; i++) {
