@@ -39,7 +39,10 @@ class Solution {
 
     solve() {
         let generator = new PathGenerator(this.problem);
+        console.log('> Calculating paths for #' + this.problemNumber + '...');
+        console.time('> problem-' + this.problemNumber + '-paths');
         this.paths = generator.calculatePaths();
+        console.timeEnd('> problem-' + this.problemNumber + '-paths');
         this.awakeRobots = [0];
         this.sleepingRobots = [];
         let robotCount = this.problem.robotLocations.length;
