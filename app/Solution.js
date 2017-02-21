@@ -6,7 +6,7 @@
 
 "use strict";
 
-const _ = require('underscore');
+const deasync = require('deasync');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator');
 const fs = require('fs');
@@ -42,28 +42,38 @@ class Solution {
     }
 
     solve() {
-        let generator = new PathGenerator(this.problem);
+
         console.log('> Calculating available paths for #' + this.problem.problemNumber + '...');
         console.time('> problem-' + this.problem.problemNumber + '-paths');
-        this.paths = generator.calculatePaths();
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
-        this.awakeRobots = [0];
-        this.sleepingRobots = [];
-        let robotCount = this.problem.robotLocations.length;
-        for (let i = 1; i < robotCount; i++) {
-            this.sleepingRobots.push(i);
-        }
-        this.currentLocations = {0: 0};
-        this.currentPaths = {0: []};
-        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
-        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
-        this.calculateRobotPaths();
-        for(let i = 0; i < robotCount; i++) {
-            if(this.currentPaths[i] !== undefined) {
-                this.robotPaths.push(this.currentPaths[i]);
+        this.complete = false;
+        let generator = new PathGenerator(this.problem);
+        generator.calculatePaths((paths) => {
+
+            this.paths = paths;
+            console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
+            this.awakeRobots = [0];
+            this.sleepingRobots = [];
+            let robotCount = this.problem.robotLocations.length;
+            for (let i = 1; i < robotCount; i++) {
+                this.sleepingRobots.push(i);
             }
+            this.currentLocations = {0: 0};
+            this.currentPaths = {0: []};
+            console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+            console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
+            this.calculateRobotPaths();
+            for(let i = 0; i < robotCount; i++) {
+                if(this.currentPaths[i] !== undefined) {
+                    this.robotPaths.push(this.currentPaths[i]);
+                }
+            }
+            console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
+            this.complete = true;
+        });
+        while(!this.complete) {
+            deasync.runLoopOnce();
         }
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
+        console.log(this.robotPaths);
     }
 
     logPath(path) {
