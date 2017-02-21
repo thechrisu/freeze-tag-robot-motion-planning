@@ -20,7 +20,6 @@ class Solver {
     constructor(problems) {
         this.problems = problems;
         this.solvedSolutions = [];
-        this.precomputedPaths = undefined;
     }
 
     solveConcurrently(solution) {
@@ -47,7 +46,7 @@ class Solver {
     solve(problemIndex) {
         console.log('Problem: ' + (problemIndex + 1));
         try {
-            let solution = new Solution(this.problems[problemIndex], undefined, this.precomputedPaths);
+            let solution = new Solution(this.problems[problemIndex]);
             solution.solve();
             this.solvedSolutions.push(solution.getCompressedSolution());
         } catch (e) {

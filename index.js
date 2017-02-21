@@ -10,7 +10,7 @@ const ProblemSet = require('./app/ProblemSet');
 const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
-function solveWrapper(isVisualizing, selected, isSolvingAll) {
+function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
         let solver = new Solver(problems);
         if (isSolvingAll) {
@@ -22,12 +22,16 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
             let solutions = solver.getSolutions();
             Viz.Visualizer.visualizeSolutions(solutions);
         }
+        if (isExportingPaths) {
+            let solutions = solver.getSolutions();
+            ProblemSolutionSynthesizer.exportPaths('./paths.mat', solutions);
+        }
         solver.exportToFile('./solution.mat');
     });
 }
 
 function visualizeProblemSolution() {
-    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/best.mat', (solutions) => {
+    ProblemSolutionSynthesizer.hollowSolutionsFromFilePaths('./robots.mat', 'solutions/best.mat', (solutions) => {
         Viz.Visualizer.visualizeSolutions(solutions);
     });
 }
@@ -49,8 +53,9 @@ function parseProblemArray(rawProblemString) {
 program.command('*')
     .usage("[mode]")
     .description('Our solutions. Sorry for the crappy docstring here. all | [1,2,17] for solving all/selected problems. ' +
-        '-v | --visualize for visualizations')
-    .option("-v, --visualize", "Whether to visualize the problems after solving them")
+        '-v | --visualize for visualizations' +
+        '-p | --paths (format specified): Skips the path generation stage for the paths found. Then solves those solutions with paths' +
+        '-sp | --save-paths (format specified): Saves paths which it computed solutions for')
     .action(function(mode, options) {
         if(mode == "manual") {
             visualizeProblemSolution();
@@ -58,7 +63,9 @@ program.command('*')
             let selectedProblems = parseProblemArray(mode);
             let isSolvingAll = mode == "all" || !selectedProblems;
             let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
-            solveWrapper(isVisualizing, selectedProblems, isSolvingAll);
+            let isImportingPaths = process.argv.indexOf("-p") != -1 || process.argv.indexOf("--paths") != -1;
+            let isExportingPaths = process.argv.indexOf("-sp") != -1 || process.argv.indexOf("--save-paths") != -1;
+            solveWrapper(isVisualizing, selectedProblems, isSolvingAll, isImportingPaths, isExportingPaths);
         }
     });
 

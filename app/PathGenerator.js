@@ -21,12 +21,23 @@ class Path {
      * @param endRobot
      */
     constructor(points, cost, startRobot, endRobot) {
-        this.startRobot = startRobot;
-        this.endRobot = endRobot;
         this.points = points;
         this.cost = cost;
+        this.startRobot = startRobot;
+        this.endRobot = endRobot;
     }
 
+    toJSON() {
+        let points = [];
+        for(let i = 0; i < this.points.length; i++) {
+            points.push({x: this.points[i].x, y: this.points[i].y});
+        }
+        let temp = this.points;
+        this.points = points;
+        let ret = JSON.stringify(this);
+        this.points = temp;
+        return JSON.parse(ret); //lol, it's so hacky man, I don't know.. but it's the quickest way to get a deep copy!
+    }
 }
 
 class PathGenerator {
@@ -95,7 +106,6 @@ class PathGenerator {
                 this.calculatePath(grid.clone(), finder, startRobot, endRobot);
             }
         }
-
         return this.paths;
     }
 

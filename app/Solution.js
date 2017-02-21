@@ -39,6 +39,7 @@ class Solution {
         return {
             problem: this.problem,
             robotPaths: this.robotPaths,
+            paths: this.paths,
             toString: this.toString
         }
     }
@@ -50,6 +51,7 @@ class Solution {
         if(!this.paths) {
             this.paths = generator.calculatePaths();
         }
+        console.log(this.paths);
         console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
         this.awakeRobots = [0];
         this.sleepingRobots = [];

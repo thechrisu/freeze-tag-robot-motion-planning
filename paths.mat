@@ -1,0 +1,16 @@
+5: { '0':
+      { '0': Path { startRobot: 0, endRobot: 0, points: [Object], cost: 0 },
+        '1':
+         Path {
+           startRobot: 0,
+           endRobot: 1,
+           points: [Object],
+           cost: 933.4204896855327 } },
+     '1':
+      { '0':
+         Path {
+           startRobot: 0,
+           endRobot: 1,
+           points: [Object],
+           cost: 933.4204896855327 },
+        '1': Path { startRobot: 1, endRobot: 1, points: [Object], cost: 0 } } }
