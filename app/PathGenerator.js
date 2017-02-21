@@ -18,6 +18,14 @@ const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 6;
 const STROKE_WIDTH = 0.3;
 
+const working_configs = {
+    21: {
+        MIN_COST_CUTOFF_FACTOR: 4,
+        CELLS_PER_UNIT: 6,
+        STROKE_WIDTH: 0.3,
+    },
+};
+
 class Path {
 
     /**
