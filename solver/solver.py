@@ -81,6 +81,17 @@ class Solution(object):
         path = "; ".join(paths)
         return str(self.problem_number) + ':' + path
 
+    def remove_duplicates_and_append(self, path):
+        unique_path = [path[0]]
+        for i in range(1, len(path)):
+            if path[i] != path[i-1]:
+                unique_path.append(path[i])
+
+        if len(unique_path) < 2:
+            return
+        else:
+            self.paths.append(unique_path)
+
     def answer(self):
         # start = self.robots[0]
         # self.path.append(start)
@@ -116,7 +127,11 @@ class Solution(object):
         robot = self.find_closest_robot(start)
         if not robot:
             if current_path:
-                self.paths.append(current_path)
+                # self.paths.append(current_path)
+                self.remove_duplicates_and_append(current_path)
+            return
+
+        if robot == start:
             return
 
         while start:
