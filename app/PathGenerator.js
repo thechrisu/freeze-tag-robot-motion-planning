@@ -15,8 +15,8 @@ const childProcess = require('child_process');
 
 const MIN_COST_CUTOFF_FACTOR = 4;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 8;
-const STROKE_WIDTH = 0;
+const CELLS_PER_UNIT = 12;
+const STROKE_WIDTH = 0.3;
 
 class Path {
 
@@ -342,6 +342,9 @@ class PathGenerator {
             context.lineTo(point.x, point.y);
         }
         context.closePath();
+        if(STROKE_WIDTH > 0) {
+            context.stroke();
+        }
         context.fill();
     }
 
