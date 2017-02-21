@@ -1,0 +1,15 @@
+findTargets(robots) // array of size 2. 
+	for each robot in robots
+		let target = distances[robots[1]].indexOf(min(distances[robots[1]]))
+		distances[robots[1]][target] = INFINITY
+		distances[target][robots[1]] = INFINITY
+		reachRobot(robot, target)
+
+
+generateDistanceMatrix()
+	distances = [][]
+	distances.fill(INFINITY)
+	for i = 0 to robots.length
+		for j = i to robots.length
+			distances[i][j] = getDistances(robots[i], robots[j])
+			distances[j][i] = distances[i][j]
