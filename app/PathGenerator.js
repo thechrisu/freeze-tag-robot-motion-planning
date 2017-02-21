@@ -12,6 +12,7 @@ const Canvas = require('canvas');
 const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
+const AsyncLock = require('async-lock');
 
 const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 3;
@@ -51,6 +52,8 @@ class PathGenerator {
      */
     constructor(problem) {
         this.problem = problem;
+        this.jobCount = 1;
+        this.lock = new AsyncLock();
         this.calculateProblemSize();
     }
 
@@ -165,7 +168,10 @@ class PathGenerator {
             thread.on('message', (data) => {
                 let k = i;
                 this.threadLoad[k] = this.threadLoad[k] - 1;
-                this.registerPath(data);
+                this.lock.acquire(this.jobCount, (done) => {
+                    this.registerPath(data);
+                    done();
+                });
             });
             thread.on('exit', (data) => {
                 if(data) {
@@ -205,7 +211,7 @@ class PathGenerator {
         this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
 
         this.jobCount--;
-        if(this.jobCount < 1000) {
+        if(this.jobCount < 700) {
             console.log('job count: ' + this.jobCount);
         }
         if (this.jobCount === 0) {
