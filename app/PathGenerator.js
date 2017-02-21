@@ -167,8 +167,10 @@ class PathGenerator {
                 this.threadLoad[k] = this.threadLoad[k] - 1;
                 this.registerPath(data);
             });
-            thread.stderr.on('data', (data) => {
-                console.error(data);
+            thread.on('exit', (data) => {
+                if(data) {
+                    console.error(data);
+                }
             });
             this.threads.push(thread);
         }
