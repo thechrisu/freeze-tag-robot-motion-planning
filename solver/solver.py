@@ -1,5 +1,6 @@
 from shapely.geometry import Point, LinearRing, LineString
 import os
+import threading
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -34,6 +35,7 @@ class Solution(object):
         self.paths = []
         self.generate_distance_matrix()
         self.left = {}
+        self.lock = threading.Lock()
 
         for robot in self.robots:
             self.left[self.point_to_key(robot)] = None
@@ -74,7 +76,8 @@ class Solution(object):
         # return self.convert_points_to_tuples(self.path)
 
         del self.left[self.point_to_key(self.robots[0])]
-        self.reach_closest_robot(self.robots[0])
+        self.reach_closest_robot(self.robots[0], [])
+
 
     def convert_points_to_tuples(self, points):
         return [(point.x, point.y) for point in points]
@@ -83,25 +86,34 @@ class Solution(object):
         return [Point(x, y) for x, y in points]
 
     def find_closest_robot(self, start):
-        closest_robot, minimum_dist = None, float("inf")
-        for (robot, distance) in self.distances[self.point_to_key(start)]:
-            if self.point_to_key(robot) in self.left and distance < minimum_dist:
-                minimum_dist = distance
-                closest_robot = robot
-        if closest_robot:
-            del self.left[self.point_to_key(closest_robot)]
-        return closest_robot
+        with self.lock:
+            closest_robot, minimum_dist = None, float("inf")
+            for (robot, distance) in self.distances[self.point_to_key(start)]:
+                if self.point_to_key(robot) in self.left and distance < minimum_dist:
+                    minimum_dist = distance
+                    closest_robot = robot
+            if closest_robot:
+                del self.left[self.point_to_key(closest_robot)]
+            return closest_robot
 
-    def reach_closest_robot(self, start):
-        current_path = []
+    def reach_closest_robot(self, start, current_path):
+        current_path.append(start)
         robot = self.find_closest_robot(start)
         if not robot:
+            self.paths.append(current_path)
             return
         while start:
             start = self.reach_robot(start, robot, current_path)
-        self.paths.append(current_path)
-        self.reach_closest_robot(robot)
-        self.reach_closest_robot(robot)
+
+        t1 = threading.Thread(target=self.reach_closest_robot, args=(robot, []))
+        t2 = threading.Thread(target=self.reach_closest_robot, args=(robot, current_path))
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+
 
     def reach_robot(self, start, robot, current_path):
         p = LineString([(start.x, start.y), (robot.x, robot.y)])
@@ -199,4 +211,4 @@ with open('solver.mat', 'a') as sol_file:
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
         print(sol_str)
-        # sol_file.writelines(sol_str + '\n')
+        sol_file.writelines(sol_str + '\n')
