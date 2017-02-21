@@ -10,11 +10,16 @@ const ProblemSet = require('./app/ProblemSet');
 const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
+const PROBLEM_FILE = './robots.mat';
+const PATHS_FILE = 'paths.mat';
+const SOLUTION_FILE = './solution.mat';
+const MANUAL_FILE = 'solutions/best.mat';
+
 function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths) {
-    ProblemSet.importFromFile('./robots.mat', (problems) => {
+    ProblemSet.importFromFile(PROBLEM_FILE, (problems) => {
         let solver = new Solver(problems);
         if(isImportingPaths) {
-            ProblemSolutionSynthesizer.pathsSolutionsFromFile('./robots.mat', 'paths.mat', (solutions_dict) => {
+            ProblemSolutionSynthesizer.pathsSolutionsFromFile(problems, PATHS_FILE, (solutions_dict) => {
                 solver = new Solver(problems, solutions_dict);
             });
         }
@@ -29,14 +34,14 @@ function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, i
         }
         if (isExportingPaths) {
             let solutions = solver.getSolutions();
-            ProblemSolutionSynthesizer.exportPaths('./paths.mat', solutions);
+            ProblemSolutionSynthesizer.exportPaths(PATHS_FILE, solutions);
         }
-        solver.exportToFile('./solution.mat');
+        solver.exportToFile(SOLUTION_FILE);
     });
 }
 
 function visualizeProblemSolution() {
-    ProblemSolutionSynthesizer.hollowSolutionsFromFilePaths('./robots.mat', 'solutions/best.mat', (solutions) => {
+    ProblemSolutionSynthesizer.hollowSolutionsFromFilePaths(PROBLEM_FILE, MANUAL_FILE, (solutions) => {
         Viz.Visualizer.visualizeSolutions(solutions);
     });
 }
