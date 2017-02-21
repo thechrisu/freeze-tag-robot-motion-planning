@@ -37,6 +37,7 @@ class Solution {
      */
     getCompressedSolution() {
         return {
+            awakeRobots: this.awakeRobots,
             problem: this.problem,
             robotPaths: this.robotPaths,
             paths: this.paths,
@@ -67,7 +68,7 @@ class Solution {
             console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
             this.awakeRobotCount = 1;
             while(this.awakeRobotCount < robotCount) {
-                this.calculateRobotPaths();
+                if(this.calculateRobotPaths() === false) break;
             }
             for(let i = 0; i < robotCount; i++) {
                 if(this.currentPaths[i] !== undefined) {
@@ -121,8 +122,8 @@ class Solution {
         if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
             console.error('No solution! Dumping results as-is.');
             this.awakeRobots = this.problem.robotLocations.length;
-            //return;
-            process.exit(1);
+            return false;
+            //process.exit(1);
         }
 
         for (let i = 0; i < optionCount; i++) {
