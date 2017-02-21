@@ -32,20 +32,49 @@ class Solution(object):
         self.problem_number = problem.problem_number
         self.distances = {}
         self.paths = []
+        self.generate_distance_matrix()
+        self.left = {}
+
+        for robot in self.robots:
+            self.left[self.point_to_key(robot)] = None
+
+    def point_to_key(self, point):
+        return list(point.coords)[0]
+
+    def generate_distance_matrix(self):
+        for robot in self.robots:
+            self.distances[self.point_to_key(robot)] = []
+            for reach in self.robots:
+                if robot is reach:
+                    self.distances[self.point_to_key(robot)].append(
+                        tuple((reach, float("inf"))))
+                else:
+                    self.distances[self.point_to_key(robot)].append(
+                        tuple((reach, robot.distance(reach))))
+
+    def list_of_points_to_path(self, points):
+        return str(self.convert_points_to_tuples(points))[1:-1]
 
     def to_string(self):
-        tuples = self.answer()
-        return str(self.problem_number) + ':' + str(tuples)[1:-1]
+        # tuples = self.answer()
+        self.answer()
+        path = ""
+        paths = list(map(self.list_of_points_to_path, self.paths))
+        path = ";".join(paths)
+        return str(self.problem_number) + ':' + path
 
     def answer(self):
-        start = self.robots[0]
-        self.path.append(start)
+        # start = self.robots[0]
+        # self.path.append(start)
+        #
+        # for robot in self.robots[1:]:
+        #     self.reach_robot(start, robot)
+        #     start = robot
+        #
+        # return self.convert_points_to_tuples(self.path)
 
-        for robot in self.robots[1:]:
-            self.reach_robot(start, robot)
-            start = robot
-
-        return self.convert_points_to_tuples(self.path)
+        del self.left[self.point_to_key(self.robots[0])]
+        self.reach_closest_robot(self.robots[0])
 
     def convert_points_to_tuples(self, points):
         return [(point.x, point.y) for point in points]
@@ -54,16 +83,20 @@ class Solution(object):
         return [Point(x, y) for x, y in points]
 
     def find_closest_robot(self, start):
-        closest_robot, minimum_dist = None, None
-        for robot, distance in self.distances[start]:
-            if distance < minimum_dist:
+        closest_robot, minimum_dist = None, float("inf")
+        for (robot, distance) in self.distances[self.point_to_key(start)]:
+            if self.point_to_key(robot) in self.left and distance < minimum_dist:
                 minimum_dist = distance
                 closest_robot = robot
+        if closest_robot:
+            del self.left[self.point_to_key(closest_robot)]
         return closest_robot
 
     def reach_closest_robot(self, start):
         current_path = []
         robot = self.find_closest_robot(start)
+        if not robot:
+            return
         while start:
             start = self.reach_robot(start, robot, current_path)
         self.paths.append(current_path)
@@ -89,7 +122,7 @@ class Solution(object):
 
         # if robot can be reached without collision
         if not closest_intersection:
-            self.current_path.append(robot)
+            current_path.append(robot)
             return None
         # in case of collision move around obstacle
         # and call function recursively from intersect_end
@@ -110,7 +143,7 @@ class Solution(object):
 
     def find_points_from_obstacle(self, entry, exit, obstacle):
         coords = list(obstacle.coords)
-        coords.append(tuple(coords[0]))
+        coords.append(coords[0])
         result = []
 
         s1, s2 = self.get_edge_indices(entry, coords)
@@ -127,13 +160,12 @@ class Solution(object):
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
 
-        print([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit])
+        # print([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit])
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
 
 
 def parse(s):
-    print(s)
     if '#' in s:
         robots, obstacles = s.split('#')
     else:
@@ -167,4 +199,4 @@ with open('solver.mat', 'a') as sol_file:
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
         print(sol_str)
-        sol_file.writelines(sol_str + '\n')
+        # sol_file.writelines(sol_str + '\n')
