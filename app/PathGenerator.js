@@ -102,7 +102,7 @@ class PathGenerator {
         this.callback = callback;
         this.paths = {};
         this.jobCount = 0;
-
+        this.t1 = undefined;
         this.prepareThreads();
         console.log('--> Preparing grid matrix...');
         let gridMatrix = this.generateGridMatrix(this.problem.obstacles);
@@ -135,6 +135,11 @@ class PathGenerator {
                 //this.calculatePath(grid.clone(), finder, startRobot, endRobot);
             }
         }
+        this.t1 = setTimeout(() => {
+            console.log('Too much time elapsed that no job has been completed --> exiting');
+            this.jobCount = 0;
+            this.jobCount = 0;
+        }, 1000);
         console.log('done adding jobs!');
     }
 
@@ -162,6 +167,9 @@ class PathGenerator {
     prepareThreads() {
         this.threadLoad = [];
         this.threads = [];
+        if(this.jobCount < 700) {
+            console.log('job count: ' + this.jobCount);
+        }
         for (let i = 0; i < CPUCount; i++) {
             this.threadLoad.push(0);
             let thread = childProcess.fork(path.join(__dirname, THREAD_FILE));
@@ -169,7 +177,16 @@ class PathGenerator {
                 let k = i;
                 this.threadLoad[k] = this.threadLoad[k] - 1;
                 this.lock.acquire(this.jobCount, (done) => {
+                    clearTimeout(this.t1);
+                    if(this.jobCount < 700) {
+                        console.log('job count: ' + this.jobCount);
+                    }
                     this.registerPath(data);
+                    this.t1 = setTimeout(() => {
+                        console.log('Too much time elapsed that no job has been completed --> exiting');
+                        this.jobCount = 0;
+                        this.jobCount = 0;
+                    }, 1000);
                     done();
                 });
             });
@@ -211,10 +228,7 @@ class PathGenerator {
         this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
 
         this.jobCount--;
-        if(this.jobCount < 700) {
-            console.log('job count: ' + this.jobCount);
-        }
-        if (this.jobCount === 0) {
+        if (this.jobCount === 0 || this.jobCount < 0) {
             this.killThreads();
             this.callback(this.paths);
         }
