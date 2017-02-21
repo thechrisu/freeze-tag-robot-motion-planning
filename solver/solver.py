@@ -30,7 +30,8 @@ class Solution(object):
         self.robots = problem.robot_locations
         self.obstacles = problem.obstacles
         self.problem_number = problem.problem_number
-        self.path = []
+        self.distances = {}
+        self.paths = []
 
     def to_string(self):
         tuples = self.answer()
@@ -52,7 +53,24 @@ class Solution(object):
     def convert_tuples_to_points(self, points):
         return [Point(x, y) for x, y in points]
 
-    def reach_robot(self, start, robot):
+    def find_closest_robot(self, start):
+        closest_robot, minimum_dist = None, None
+        for robot, distance in self.distances[start]:
+            if distance < minimum_dist:
+                minimum_dist = distance
+                closest_robot = robot
+        return closest_robot
+
+    def reach_closest_robot(self, start):
+        current_path = []
+        robot = self.find_closest_robot(start)
+        while start:
+            start = self.reach_robot(start, robot, current_path)
+        self.paths.append(current_path)
+        self.reach_closest_robot(robot)
+        self.reach_closest_robot(robot)
+
+    def reach_robot(self, start, robot, current_path):
         p = LineString([(start.x, start.y), (robot.x, robot.y)])
         closest_intersection = None
 
@@ -60,7 +78,6 @@ class Solution(object):
             intersection = p.intersection(obstacle)
             if intersection and intersection.geom_type == "MultiPoint":
                 # using 1 and -1 as maybe more than two intersection points
-                # print(intersection)
                 temp = list(intersection)
                 intersect_start = temp[0]
                 intersect_end = temp[-1]
@@ -72,12 +89,15 @@ class Solution(object):
 
         # if robot can be reached without collision
         if not closest_intersection:
-            self.path.append(robot)
+            self.current_path.append(robot)
+            return None
         # in case of collision move around obstacle
         # and call function recursively from intersect_end
         else:
-            self.path.extend(self.find_points_from_obstacle(*closest_intersection))
-            self.reach_robot(self.path[-1], robot)
+            current_path.extend(self.find_points_from_obstacle(*closest_intersection))
+            # self.reach_robot(self.path[-1], robot, current_path)
+            # to eliminate recursion depth just returning the next start point
+            return current_path[-1]
 
     def get_edge_indices(self, point, coords):
         distances = []
@@ -85,14 +105,10 @@ class Solution(object):
             edge = LineString([coords[i-1], coords[i]])
             distances.append(point.distance(edge))
             if point.distance(edge) < 1e-14:
-                print("found point")
                 return i-1, i
-        print(min(distances), distances)
         raise "Point not found"
 
     def find_points_from_obstacle(self, entry, exit, obstacle):
-        print("Hit obstacle")
-
         coords = list(obstacle.coords)
         coords.append(tuple(coords[0]))
         result = []
@@ -114,16 +130,6 @@ class Solution(object):
         print([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit])
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
-
-
-def gradient(points):
-    for i in range(1, len(points)):
-        x1, y1 = points[i-1]
-        x2, y2 = points[i]
-
-        print((y2-y1)/(x2-x1))
-
-# gradient(ans.answer())
 
 
 def parse(s):
