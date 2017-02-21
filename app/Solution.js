@@ -8,15 +8,18 @@
 
 const _ = require('underscore');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
-const PathGenerator = require('./PathGenerator');
+const PathGenerator = require('./PathGenerator').PathGenerator;
+const fs = require('fs');
+const TimSort = require('timsort');
 
 class Solution {
 
     /**
      * @param {Problem} problem
      * @param robotPaths
+     * @param paths
      */
-    constructor(problem, robotPaths) {
+    constructor(problem, robotPaths, paths) {
         this.problem = problem;
         if(!robotPaths) {
             /**
@@ -26,6 +29,7 @@ class Solution {
         } else {
             this.robotPaths = robotPaths;
         }
+        this.paths = paths
     }
 
     /**
@@ -33,17 +37,21 @@ class Solution {
      */
     getCompressedSolution() {
         return {
-            robotLocations: this.problem.robotLocations,
-            obstacles: this.problem.obstacles,
-            problemNumber: this.problemNumber,
+            problem: this.problem,
             robotPaths: this.robotPaths,
+            paths: this.paths,
             toString: this.toString
         }
     }
 
     solve() {
         let generator = new PathGenerator(this.problem);
-        this.paths = generator.calculatePaths();
+        console.log('> Calculating available paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-paths');
+        if(!this.paths) {
+            this.paths = generator.calculatePaths();
+        }
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
         this.awakeRobots = [0];
         this.sleepingRobots = [];
         let robotCount = this.problem.robotLocations.length;
@@ -52,14 +60,15 @@ class Solution {
         }
         this.currentLocations = {0: 0};
         this.currentPaths = {0: []};
+        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
         this.calculateRobotPaths();
         for(let i = 0; i < robotCount; i++) {
             if(this.currentPaths[i] !== undefined) {
                 this.robotPaths.push(this.currentPaths[i]);
-            } else {
-                //this.robotPaths.push([]);
             }
         }
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
     }
 
     logPath(path) {
@@ -92,7 +101,7 @@ class Solution {
             }
         }
 
-        _.sortBy(options, (option) => option.cost);
+        TimSort.sort(options, (o1, o2) => o1.cost - o2.cost);
 
         let awokenRobots = [];
         let busyRobots = [];
@@ -134,22 +143,13 @@ class Solution {
     }
 
     print() {
-        let s = "";
-        for(let i = 0; i < this.robotPaths.length; i++) {
-            let robotPath = this.robotPaths[i];
-            for(let j = 0; j < robotPath.length; j++) {
-                s += '(' + robotPath[j].x + ',' + robotPath[j].y + ')';
-                if(j != robotPath.length - 1) {
-                    s += ',';
-                } else {
-                    s += ';';
-                }
-            }
-        }
-        if(s[s.length - 1] == ";") {
-            s = s.substr(0, s.length - 1);
-        }
-        console.log(this.problem.problemNumber + ': ' + s);
+        console.log(this.problem.problemNumber + ': ' + this.toString());
+    }
+
+    save() {
+        fs.writeFileSync(process.cwd() + '/sol-quicksave-'
+            + this.problem.problemNumber.toString() + '.mat',
+            this.problem.problemNumber + ': ' + this.toString());
     }
 
     toString() {

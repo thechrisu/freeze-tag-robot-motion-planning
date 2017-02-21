@@ -17,12 +17,27 @@ class Path {
     /**
      * @param {Point[]} points
      * @param {number} cost
+     * @param startRobot
+     * @param endRobot
      */
-    constructor(points, cost) {
+    constructor(points, cost, startRobot, endRobot) {
         this.points = points;
         this.cost = cost;
+        this.startRobot = startRobot;
+        this.endRobot = endRobot;
     }
 
+    toJson() {
+        let points = [];
+        for(let i = 0; i < this.points.length; i++) {
+            points.push({x: this.points[i].x, y: this.points[i].y});
+        }
+        let temp = this.points;
+        this.points = points;
+        let ret = JSON.stringify(this);
+        this.points = temp;
+        return JSON.parse(ret); //lol, it's so hacky man, I don't know.. but it's the quickest way to get a deep copy!
+    }
 }
 
 class PathGenerator {
@@ -91,7 +106,6 @@ class PathGenerator {
                 this.calculatePath(grid.clone(), finder, startRobot, endRobot);
             }
         }
-
         return this.paths;
     }
 
@@ -123,8 +137,8 @@ class PathGenerator {
         pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
         pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
 
-        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength);
-        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
+        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength, startRobot, endRobot);
+        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
     }
 
     /**
@@ -215,4 +229,4 @@ class PathGenerator {
 
 }
 
-module.exports = PathGenerator;
+module.exports = {PathGenerator, Path};
