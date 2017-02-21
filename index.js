@@ -23,6 +23,7 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
             Viz.Visualizer.visualizeSolutions(solutions);
         }
         solver.exportToFile('./solution.mat');
+        process.exit(0);
     });
 }
 

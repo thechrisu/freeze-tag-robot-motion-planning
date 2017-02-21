@@ -21,7 +21,7 @@ process.on('message', (data) => {
     let end = data.end;
     let grid = new PF.Grid(data.gridMatrix);
 
-    console.log('==> Calculating ' + startRobot + ' -> ' + endRobot + ' (and vice versa)');
+    console.log('==> ' + startRobot + ' -> ' + endRobot);
 
     let path = PF.Util.compressPath(finder.findPath(
         Math.round(start.x),

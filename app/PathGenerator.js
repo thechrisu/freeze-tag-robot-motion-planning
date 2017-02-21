@@ -14,7 +14,7 @@ const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 11;
+const CELLS_PER_UNIT = 3;
 
 class Path {
 
@@ -86,18 +86,19 @@ class PathGenerator {
         this.jobCount = 0;
 
         this.prepareThreads();
+        console.log('--> Preparing grid matrix...');
         let gridMatrix = this.generateGridMatrix(this.problem.obstacles);
+        console.log('--> Grid matrix ready!');
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
             for (let endRobot = 0; endRobot < robotCount; endRobot++) {
 
+                if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
+                if (processedPaths[endRobot] === undefined) processedPaths[endRobot] = {};
 
-                if(processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
-                if(processedPaths[endRobot] === undefined) processedPaths[endRobot] = {};
-
-                if(startRobot === endRobot) continue;
-                if(processedPaths[startRobot][endRobot] === true) continue;
+                if (startRobot === endRobot) continue;
+                if (processedPaths[startRobot][endRobot] === true) continue;
 
                 this.jobCount++;
 
@@ -127,20 +128,22 @@ class PathGenerator {
         let threadCount = this.threads.length;
         let minLoad = Infinity;
         let i;
-        for(i = 0; i < threadCount; i++) {
-            if(this.threadLoad[i] < minLoad) {
+        let threadIndex = 0;
+        for (i = 0; i < threadCount; i++) {
+            if (this.threadLoad[i] < minLoad) {
                 minLoad = this.threadLoad[i];
+                threadIndex = i;
             }
         }
         i -= 1;
-        this.threadLoad[i] = this.threadLoad[i] + 1;
-        return this.threads[i];
+        this.threadLoad[threadIndex] = this.threadLoad[threadIndex] + 1;
+        return this.threads[threadIndex];
     }
 
     prepareThreads() {
         this.threadLoad = [];
         this.threads = [];
-        for(let i = 0; i < CPUCount; i++) {
+        for (let i = 0; i < CPUCount; i++) {
             this.threadLoad.push(0);
             let thread = childProcess.fork(path.join(__dirname, THREAD_FILE));
             thread.on('message', (data) => {
@@ -152,8 +155,14 @@ class PathGenerator {
         }
     }
 
+    killThreads() {
+        for (let i = 0; i < CPUCount; i++) {
+            this.threads[i].kill();
+        }
+    }
+
     registerPath(data) {
-        if(!data.success) return;
+        if (!data.success) return;
 
         let startRobot = data.startRobot;
         let endRobot = data.endRobot;
@@ -176,7 +185,8 @@ class PathGenerator {
 
         this.jobCount--;
 
-        if(this.jobCount === 0) {
+        if (this.jobCount === 0) {
+            this.killThreads();
             this.callback(this.paths);
         }
     }
@@ -237,14 +247,14 @@ class PathGenerator {
      * @return {Array.<Number[]>}
      */
     generateGridMatrix(obstacles) {
-        let context = this.generateCanvasContext(obstacles);
+        let context = obstacles.length > 0 ? this.generateCanvasContext(obstacles) : null;
         let width = this.problemWidth * CELLS_PER_UNIT;
         let height = this.problemHeight * CELLS_PER_UNIT;
         let matrix = [];
         for (let y = 0; y < height; y++) {
             let row = [];
             for (let x = 0; x < width; x++) {
-                let walkable = context.getImageData(x, y, 1, 1).data['3'] < 10;
+                let walkable = !context || context.getImageData(x, y, 1, 1).data['3'] < 10;
                 row.push(walkable ? 0 : 1);
             }
             matrix.push(row);
