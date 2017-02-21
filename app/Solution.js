@@ -37,6 +37,7 @@ class Solution {
      */
     getCompressedSolution() {
         return {
+            awakeRobots: this.awakeRobots,
             problem: this.problem,
             robotPaths: this.robotPaths,
             paths: this.paths,
@@ -51,6 +52,7 @@ class Solution {
         this.complete = false;
         let generator = new PathGenerator(this.problem);
         generator.calculatePaths((paths) => {
+            console.log('> Found available paths for #' + this.problem.problemNumber + '!');
             //TODO: Re-do checking whether path is there
             this.paths = paths;
             console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
@@ -66,7 +68,7 @@ class Solution {
             console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
             this.awakeRobotCount = 1;
             while(this.awakeRobotCount < robotCount) {
-                this.calculateRobotPaths();
+                if(this.calculateRobotPaths() === false) break;
             }
             for(let i = 0; i < robotCount; i++) {
                 if(this.currentPaths[i] !== undefined) {
@@ -100,7 +102,7 @@ class Solution {
             let location = this.currentLocations[awakeRobot];
             for (let k = 0; k < sleepingRobotCount; k++) {
                 let sleepingRobot = this.sleepingRobots[k];
-                if(this.paths[location][sleepingRobot]) {
+                if(this.paths[location] && this.paths[location][sleepingRobot]) {
                     options.push({
                         points: this.paths[location][sleepingRobot].points,
                         cost: this.paths[location][sleepingRobot].cost,
@@ -118,8 +120,10 @@ class Solution {
         let optionCount = options.length;
 
         if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
-            console.error('No solution!');
-            process.exit(1);
+            console.error('No solution! Dumping results as-is.');
+            this.awakeRobots = this.problem.robotLocations.length;
+            return false;
+            //process.exit(1);
         }
 
         for (let i = 0; i < optionCount; i++) {

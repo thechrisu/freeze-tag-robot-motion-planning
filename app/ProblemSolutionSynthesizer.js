@@ -136,7 +136,9 @@ class ProblemSolutionSynthesizer {
         for(let i = 0; i < solution.problem.robotLocations.length; i++) {
             ret[i] = {};
             for(let j = 0; j < solution.problem.robotLocations.length; j++) {
-                ret[i][j] = solution.paths[i][j].toJson();
+                if(solution.paths[i] && solution.paths[i][j]) {
+                    ret[i][j] = solution.paths[i][j].toJson();
+                }
             }
         }
         return JSON.stringify(ret);

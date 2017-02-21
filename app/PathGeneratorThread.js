@@ -15,21 +15,34 @@ let finder = new PF.AStarFinder({
 
 process.on('message', (data) => {
 
+    let obstacleCount = data.obstacleCount;
     let startRobot = data.startRobot;
     let endRobot = data.endRobot;
     let start = data.start;
     let end = data.end;
-    let grid = new PF.Grid(data.gridMatrix);
 
-    console.log('==> ' + startRobot + ' -> ' + endRobot);
+    console.log('==> ' + startRobot + ' -> ' + endRobot + ' strt');
 
-    let path = PF.Util.compressPath(finder.findPath(
-        Math.round(start.x),
-        Math.round(start.y),
-        Math.round(end.x),
-        Math.round(end.y),
-        grid
-    ));
+    let path;
+
+    if (obstacleCount > 0) {
+        let grid = new PF.Grid(data.gridMatrix);
+        path = PF.Util.compressPath(finder.findPath(
+            Math.round(start.x),
+            Math.round(start.y),
+            Math.round(end.x),
+            Math.round(end.y),
+            grid
+        ));
+    } else {
+        path = [
+            [start.x, start.y],
+            [end.x, end.y],
+        ]
+    }
+
+    console.log('==> ' + startRobot + ' -> ' + endRobot + ' done');
+
 
     if (path.length === 0) {
         process.send({
@@ -37,6 +50,7 @@ process.on('message', (data) => {
         });
         return;
     }
+
 
     process.send({
         success: true,

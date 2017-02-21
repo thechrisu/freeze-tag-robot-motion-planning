@@ -194,11 +194,19 @@ class Visualizer {
         }
     }
 
-    static drawRobotLocations(points, ctx, scale) {
-        ctx.fillStyle = 'black';
+    static drawRobotLocations(points, ctx, scale, isAwake) {
+        if(!isAwake) {
+            ctx.fillStyle = 'black';
+        } else {
+            ctx.fillStyle = 'red';
+        }
+        let f = 1.0;
+        if(isAwake) {
+            f = 1.4;
+        }
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
-            ctx.fillRect(sp.x - 0.5 * DOT_SIZE, sp.y - 0.5 * DOT_SIZE, DOT_SIZE, DOT_SIZE);
+            ctx.fillRect(sp.x - 0.5 * f * DOT_SIZE, sp.y - 0.5 * f * DOT_SIZE, f * DOT_SIZE, f * DOT_SIZE);
         }
     }
 
@@ -235,7 +243,10 @@ class Visualizer {
         let cv = this.setupCanvas(scale);
         var canvas = cv.canvas; //Hacky due to canvas :(
         var ctx = cv.ctx;
-        Visualizer.drawRobotLocations(solutionObj.problem.robotLocations, ctx, scale);
+        Visualizer.drawRobotLocations(solutionObj.problem.robotLocations, ctx, scale, false);
+        if(solutionObj.awakeRobots) {
+            Visualizer.drawRobotLocations(solutionObj.awakeRobots, ctx, scale, true);
+        }
         Visualizer.drawObstacles(solutionObj.problem.obstacles, ctx, scale);
         Visualizer.drawRobotPaths(solutionObj.robotPaths, ctx, scale);
         Visualizer.saveAsFile(filename, canvas);
