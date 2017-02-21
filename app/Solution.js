@@ -35,9 +35,7 @@ class Solution {
      */
     getCompressedSolution() {
         return {
-            robotLocations: this.problem.robotLocations,
-            obstacles: this.problem.obstacles,
-            problemNumber: this.problemNumber,
+            problem: this.problem,
             robotPaths: this.robotPaths,
             toString: this.toString
         }
@@ -45,10 +43,10 @@ class Solution {
 
     solve() {
         let generator = new PathGenerator(this.problem);
-        console.log('> Calculating paths for #' + this.problemNumber + '...');
-        console.time('> problem-' + this.problemNumber + '-paths');
+        console.log('> Calculating available paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-paths');
         this.paths = generator.calculatePaths();
-        console.timeEnd('> problem-' + this.problemNumber + '-paths');
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
         this.awakeRobots = [0];
         this.sleepingRobots = [];
         let robotCount = this.problem.robotLocations.length;
@@ -57,12 +55,15 @@ class Solution {
         }
         this.currentLocations = {0: 0};
         this.currentPaths = {0: []};
+        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
         this.calculateRobotPaths();
         for(let i = 0; i < robotCount; i++) {
             if(this.currentPaths[i] !== undefined) {
                 this.robotPaths.push(this.currentPaths[i]);
             }
         }
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-robot-paths');
     }
 
     logPath(path) {
