@@ -121,8 +121,8 @@ class Solution {
         if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
             console.error('No solution! Dumping results as-is.');
             this.awakeRobots = this.problem.robotLocations.length;
-            return;
-            //process.exit(1);
+            //return;
+            process.exit(1);
         }
 
         for (let i = 0; i < optionCount; i++) {

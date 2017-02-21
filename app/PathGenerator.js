@@ -13,9 +13,10 @@ const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
-const MIN_COST_CUTOFF_FACTOR = 3;
+const MIN_COST_CUTOFF_FACTOR = 4;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 5;
+const CELLS_PER_UNIT = 8;
+const STROKE_WIDTH = 0;
 
 class Path {
 
@@ -158,7 +159,8 @@ class PathGenerator {
     addJobs() {
         console.log('--> Adding jobs...');
         let localJobCount = 0;
-        let gridMatrix = this.generateGridMatrix(this.problem.obstacles);
+        let obstacleCount = this.problem.obstacles.length;
+        let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles) : null;
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
@@ -179,6 +181,7 @@ class PathGenerator {
                 processedPaths[endRobot][startRobot] = true;
 
                 let dataObject = {
+                    obstacleCount,
                     startRobot,
                     endRobot,
                     start: this.scalePointToProblem(this.problem.robotLocations[startRobot]),
@@ -327,8 +330,10 @@ class PathGenerator {
      */
     drawObstacle(context, obstacle) {
         context.fillStyle = '#000';
-        context.strokeStyle = '#000';
-        context.lineWidth = 2;
+        if (STROKE_WIDTH > 0) {
+            context.strokeStyle = '#000';
+            context.lineWidth = STROKE_WIDTH;
+        }
         context.beginPath();
         let pointCount = obstacle.length;
         for (let i = 0; i < pointCount; i++) {
