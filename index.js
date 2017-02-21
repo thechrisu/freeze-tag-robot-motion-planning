@@ -27,7 +27,7 @@ function solveWrapper(isVisualizing, selected, isSolvingAll) {
 }
 
 function visualizeProblemSolution() {
-    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/best.mat', (solutions) => {
+    ProblemSolutionSynthesizer.fromPaths('./robots.mat', 'solutions/bruteforce.mat', (solutions) => {
         Viz.Visualizer.visualizeSolutions(solutions);
     });
 }
