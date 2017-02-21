@@ -229,4 +229,4 @@ class PathGenerator {
 
 }
 
-module.exports = PathGenerator;
+module.exports = {PathGenerator, Path};

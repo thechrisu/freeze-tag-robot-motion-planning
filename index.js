@@ -13,6 +13,11 @@ const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths) {
     ProblemSet.importFromFile('./robots.mat', (problems) => {
         let solver = new Solver(problems);
+        if(isImportingPaths) {
+            ProblemSolutionSynthesizer.pathsSolutionsFromFile('./robots.mat', 'paths.mat', (solutions_dict) => {
+                solver = new Solver(problems, solutions_dict);
+            });
+        }
         if (isSolvingAll) {
             solver.solveAll();
         } else {

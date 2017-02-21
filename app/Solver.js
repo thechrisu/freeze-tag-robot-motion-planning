@@ -16,10 +16,14 @@ class Solver {
 
     /**
      * @param {Problem[]} problems
+     * @param solutions_with_skipped_first_part_dict
      */
-    constructor(problems) {
+    constructor(problems, solutions_with_skipped_first_part_dict) {
         this.problems = problems;
         this.solvedSolutions = [];
+        if(solutions_with_skipped_first_part_dict) {
+            this.solutions_with_skipped_first_part_dict = solutions_with_skipped_first_part_dict;
+        }
     }
 
     solveConcurrently(solution) {
@@ -46,7 +50,13 @@ class Solver {
     solve(problemIndex) {
         console.log('Problem: ' + (problemIndex + 1));
         try {
-            let solution = new Solution(this.problems[problemIndex]);
+            let solution = undefined;
+            if(this.solutions_with_skipped_first_part_dict) {
+
+                solution = this.solutions_with_skipped_first_part_dict[problemIndex + 1]; //we store problem num
+            } else {
+                solution = new Solution(this.problems[problemIndex]);
+            }
             solution.solve();
             this.solvedSolutions.push(solution.getCompressedSolution());
         } catch (e) {

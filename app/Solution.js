@@ -8,7 +8,7 @@
 
 const _ = require('underscore');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
-const PathGenerator = require('./PathGenerator');
+const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
 const TimSort = require('timsort');
 
