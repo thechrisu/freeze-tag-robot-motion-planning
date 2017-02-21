@@ -1,6 +1,7 @@
 from shapely.geometry import Point, LinearRing, LineString
 import os
 import threading
+import sys
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -215,6 +216,15 @@ class Solution(object):
         # print([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit])
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
+
+try:
+    print('---------')
+    print('--' + sys.argv[1])
+    print('---------')
+    print(int(sys.argv[1]))
+    probs_to_solve = [int(sys.argv[1])]
+except:
+    pass
 
 robots_file = open('robots.mat', 'r')
 for line in robots_file.readlines():
