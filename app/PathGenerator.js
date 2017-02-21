@@ -13,6 +13,7 @@ const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
+const MIN_COST_CUTOFF_FACTOR = 3;
 const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 5;
 
@@ -33,7 +34,7 @@ class Path {
 
     toJson() {
         let points = [];
-        for(let i = 0; i < this.points.length; i++) {
+        for (let i = 0; i < this.points.length; i++) {
             points.push({x: this.points[i].x, y: this.points[i].y});
         }
         let temp = this.points;
@@ -101,21 +102,77 @@ class PathGenerator {
         this.paths = {};
         this.jobCount = 0;
         this.prepareThreads();
-        console.log('--> Preparing grid matrix...');
+        this.calculateSearchDomain();
+        this.addJobs();
+    }
+
+    calculateSearchDomain() {
+
+        let robotCount = this.problem.robotLocations.length;
+        let costs = {};
+        let overallMaxOfLocalMinCosts = -Infinity;
+        for (let startRobot = 0; startRobot < robotCount; startRobot++) {
+            let minCost = Infinity;
+            if (!costs[startRobot]) costs[startRobot] = {};
+            for (let endRobot = 0; endRobot < robotCount; endRobot++) {
+                if (startRobot === endRobot) continue;
+                if (!costs[endRobot]) costs[endRobot] = {};
+                if (costs[startRobot][endRobot]) continue;
+                let cost = PathGenerator.distanceBetweenPoints(
+                    this.problem.robotLocations[startRobot],
+                    this.problem.robotLocations[endRobot]
+                );
+                if (cost < minCost) minCost = cost;
+                costs[startRobot][endRobot] = cost;
+                costs[endRobot][startRobot] = cost;
+            }
+            if (minCost > overallMaxOfLocalMinCosts) overallMaxOfLocalMinCosts = minCost;
+        }
+
+        this.searchDomains = {};
+        let cutoffCost = overallMaxOfLocalMinCosts * MIN_COST_CUTOFF_FACTOR;
+        for (let startRobot = 0; startRobot < robotCount; startRobot++) {
+            if (!this.searchDomains[startRobot]) this.searchDomains[startRobot] = [];
+            for (let endRobot = 0; endRobot < robotCount; endRobot++) {
+                if (!this.searchDomains[endRobot]) this.searchDomains[endRobot] = [];
+                if (this.searchDomains[startRobot].indexOf(endRobot) !== -1) continue;
+                if (costs[startRobot][endRobot] < cutoffCost) {
+                    this.searchDomains[startRobot].push(endRobot);
+                    this.searchDomains[endRobot].push(startRobot);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param {Point} a
+     * @param {Point} b
+     * @return {number}
+     */
+    static distanceBetweenPoints(a, b) {
+        let x = Math.pow(a.x - b.x, 2);
+        let y = Math.pow(a.y - b.y, 2);
+        return Math.sqrt(x + y);
+    }
+
+    addJobs() {
+        console.log('--> Adding jobs...');
+        let localJobCount = 0;
         let gridMatrix = this.generateGridMatrix(this.problem.obstacles);
-        console.log('--> Grid matrix ready!');
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
-        console.log('--> Adding jobs...');
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
-            for (let endRobot = 0; endRobot < robotCount; endRobot++) {
-
+            let searchDomain = this.searchDomains[startRobot];
+            let searchDomainLength = searchDomain.length;
+            for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
+                let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
                 if (processedPaths[endRobot] === undefined) processedPaths[endRobot] = {};
 
                 if (startRobot === endRobot) continue;
                 if (processedPaths[startRobot][endRobot] === true) continue;
 
+                localJobCount++;
                 this.jobCount++;
 
                 processedPaths[startRobot][endRobot] = true;
@@ -132,7 +189,7 @@ class PathGenerator {
 
             }
         }
-        console.log('--> Added all jobs!');
+        console.log(`--> Added all jobs! (${localJobCount} jobs)`);
     }
 
     calculateUsingThread(data) {
@@ -168,7 +225,7 @@ class PathGenerator {
                 this.registerPath(data);
             });
             thread.on('exit', (data) => {
-                if(data) {
+                if (data) {
                     console.error(data);
                 }
             });
@@ -214,44 +271,6 @@ class PathGenerator {
     }
 
     /**
-     * @deprecated
-     */
-    calculatePath(grid, finder, startRobot, endRobot) {
-        if (this.paths[startRobot] === undefined) this.paths[startRobot] = {};
-        if (this.paths[endRobot] === undefined) this.paths[endRobot] = {};
-        if (this.paths[startRobot][endRobot] !== undefined && this.paths[startRobot][endRobot] !== undefined) {
-            return;
-        }
-        console.log('==> Calculating ' + startRobot + ' -> ' + endRobot);
-
-        let start = this.scalePointToProblem(this.problem.robotLocations[startRobot]);
-        let end = this.scalePointToProblem(this.problem.robotLocations[endRobot]);
-
-        let path = PF.Util.compressPath(finder.findPath(
-            Math.round(start.x),
-            Math.round(start.y),
-            Math.round(end.x),
-            Math.round(end.y),
-            grid
-        ));
-
-        if (path.length === 0) return;
-
-        let pointPath = this.convertPathToOriginalScalePoints(path);
-
-        let pathLength = PF.Util.pathLength(path);
-        let pointCount = pointPath.length;
-
-        pointPath[0].x = this.problem.robotLocations[startRobot].x;
-        pointPath[0].y = this.problem.robotLocations[startRobot].y;
-        pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
-        pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
-
-        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength, startRobot, endRobot);
-        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
-    }
-
-    /**
      * @param {Array.number[]} path
      * @return {Point[]}
      */
@@ -269,6 +288,7 @@ class PathGenerator {
      * @return {Array.<Number[]>}
      */
     generateGridMatrix(obstacles) {
+        console.log('--> Preparing grid matrix...');
         let context = obstacles.length > 0 ? this.generateCanvasContext(obstacles) : null;
         let width = this.problemWidth * CELLS_PER_UNIT;
         let height = this.problemHeight * CELLS_PER_UNIT;
@@ -281,6 +301,7 @@ class PathGenerator {
             }
             matrix.push(row);
         }
+        console.log('--> Grid matrix ready!');
         return matrix;
     }
 
@@ -307,7 +328,7 @@ class PathGenerator {
     drawObstacle(context, obstacle) {
         context.fillStyle = '#000';
         context.strokeStyle = '#000';
-        context.lineWidth   = 2;
+        context.lineWidth = 2;
         context.beginPath();
         let pointCount = obstacle.length;
         for (let i = 0; i < pointCount; i++) {
