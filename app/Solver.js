@@ -50,7 +50,8 @@ class Solver {
             solution.solve();
             this.solvedSolutions.push(solution.getCompressedSolution());
         } catch (e) {
-            console.error(e)
+            console.error(e);
+            console.error(e.stack);
         } finally {
             console.log('Problem done: ' + (problemIndex + 1));
         }

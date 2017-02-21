@@ -10,7 +10,7 @@ const _ = require('underscore');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator');
 const fs = require('fs');
-const path = require('path');
+const TimSort = require('timsort');
 
 class Solution {
 
@@ -96,7 +96,7 @@ class Solution {
             }
         }
 
-        _.sortBy(options, (option) => option.cost);
+        TimSort.sort(options, (o1, o2) => o1.cost - o2.cost);
 
         let awokenRobots = [];
         let busyRobots = [];
