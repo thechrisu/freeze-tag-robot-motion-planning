@@ -91,9 +91,9 @@ class ProblemSolutionSynthesizer {
     static getPathsJSON(solution) {
         let ret = {};
         for(let i = 0; i < solution.problem.robotLocations.length; i++) {
+            ret[i] = {};
             for(let j = 0; j < solution.problem.robotLocations.length; j++) {
-                console.log(solution.paths[i][j].toJSON());
-                ret[i][j] = solution.paths[i][j].toJSON();
+                ret[i][j] = solution.paths[i][j].toJson();
             }
         }
         return JSON.stringify(ret);
@@ -103,7 +103,7 @@ class ProblemSolutionSynthesizer {
         console.log('exporting paths');
         let output = "";
         for (let i = 0; i < solutions.length; i++) {
-            output += solutions[i].problemNumber + ': ' + ProblemSolutionSynthesizer.getPathsJSON(solutions[i]) + '\n';
+            output += solutions[i].problem.problemNumber + ': ' + ProblemSolutionSynthesizer.getPathsJSON(solutions[i]) + '\n';
         }
         fs.writeFileSync(pathsFilePath, output);
     }

@@ -27,7 +27,7 @@ class Path {
         this.endRobot = endRobot;
     }
 
-    toJSON() {
+    toJson() {
         let points = [];
         for(let i = 0; i < this.points.length; i++) {
             points.push({x: this.points[i].x, y: this.points[i].y});
