@@ -9,19 +9,25 @@
 const _ = require('underscore');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator');
+const fs = require('fs');
+const path = require('path');
 
 class Solution {
 
     /**
      * @param {Problem} problem
+     * @param robotPaths
      */
-    constructor(problem) {
+    constructor(problem, robotPaths) {
         this.problem = problem;
-        this.problemNumber = problem.problemNumber;
-        /**
-         * @type {Array.<Point[]>}
-         */
-        this.robotPaths = [];
+        if(!robotPaths) {
+            /**
+             * @type {Array.<Point[]>}
+             */
+            this.robotPaths = [];
+        } else {
+            this.robotPaths = robotPaths;
+        }
     }
 
     /**
@@ -55,8 +61,6 @@ class Solution {
         for(let i = 0; i < robotCount; i++) {
             if(this.currentPaths[i] !== undefined) {
                 this.robotPaths.push(this.currentPaths[i]);
-            } else {
-                //this.robotPaths.push([]);
             }
         }
     }
@@ -132,10 +136,19 @@ class Solution {
         }
     }
 
+    print() {
+        console.log(this.problem.problemNumber + ': ' + this.toString());
+    }
+
+    save() {
+        fs.writeFileSync(process.cwd() + '/sol-quicksave-'
+            + this.problem.problemNumber.toString() + '.mat',
+            this.problem.problemNumber + ': ' + this.toString());
+    }
+
     toString() {
         return CoordinateHelper.stringifyPoint2DArray(this.robotPaths);
     }
-
 }
 
 module.exports = Solution;

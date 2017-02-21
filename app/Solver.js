@@ -22,6 +22,14 @@ class Solver {
         this.solvedSolutions = [];
     }
 
+    solveConcurrently(solution) {
+        /*
+         solution.print(); //you're gonna thank me later for that
+         solution.save();
+         this.solvedSolutions.push(solution);
+         */
+    }
+
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
             this.solve(i);

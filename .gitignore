@@ -1,6 +1,6 @@
 # Solutions
 solutions/ultra-naive-just-robotlocations.mat
-solutions.mat
+solutions/bruteforce.mat
 
 # JetBrains IDE files
 .idea
