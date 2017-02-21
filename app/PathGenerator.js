@@ -17,8 +17,12 @@ class Path {
     /**
      * @param {Point[]} points
      * @param {number} cost
+     * @param startRobot
+     * @param endRobot
      */
-    constructor(points, cost) {
+    constructor(points, cost, startRobot, endRobot) {
+        this.startRobot = startRobot;
+        this.endRobot = endRobot;
         this.points = points;
         this.cost = cost;
     }
@@ -123,8 +127,8 @@ class PathGenerator {
         pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
         pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
 
-        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength);
-        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength);
+        this.paths[startRobot][endRobot] = new Path(pointPath, pathLength, startRobot, endRobot);
+        this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
     }
 
     /**

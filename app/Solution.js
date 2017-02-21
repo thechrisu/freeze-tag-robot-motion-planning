@@ -17,8 +17,9 @@ class Solution {
     /**
      * @param {Problem} problem
      * @param robotPaths
+     * @param paths
      */
-    constructor(problem, robotPaths) {
+    constructor(problem, robotPaths, paths) {
         this.problem = problem;
         if(!robotPaths) {
             /**
@@ -28,6 +29,7 @@ class Solution {
         } else {
             this.robotPaths = robotPaths;
         }
+        this.paths = paths
     }
 
     /**
@@ -45,7 +47,9 @@ class Solution {
         let generator = new PathGenerator(this.problem);
         console.log('> Calculating available paths for #' + this.problem.problemNumber + '...');
         console.time('> problem-' + this.problem.problemNumber + '-paths');
-        this.paths = generator.calculatePaths();
+        if(!this.paths) {
+            this.paths = generator.calculatePaths();
+        }
         console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
         this.awakeRobots = [0];
         this.sleepingRobots = [];
