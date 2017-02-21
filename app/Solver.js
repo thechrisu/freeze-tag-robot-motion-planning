@@ -22,15 +22,21 @@ class Solver {
         this.solvedSolutions = [];
     }
 
+    solveConcurrently(solution) {
+        /*
+         solution.print(); //you're gonna thank me later for that
+         solution.save();
+         this.solvedSolutions.push(solution);
+         */
+    }
+
     solveAll() {
         for (let i = 0; i < this.problems.length; i++) {
             if(i === 5) continue;
             if(i === 7) continue;
             console.log('Problem: ' + (i + 1));
             let solution = new Solution(this.problems[i]);
-            solution.solve();
-            solution.print(); //you're gonna thank me later for that
-            this.solvedSolutions.push(solution);
+            this.solveConcurrently(solution);
         }
     }
 
@@ -38,14 +44,12 @@ class Solver {
         for (let i = 0; i < problemNumberArray.length; i++) {
             let problemIndex = problemNumberArray[i] - 1;
             let solution = new Solution(this.problems[problemIndex]);
-            solution.solve();
-            solution.print(); //you're gonna thank me later for that
+            this.solveSafelyAndConcurrently(solution);
             this.solvedSolutions.push(solution);
             console.log('Problem: ' + (problemIndex + 1));
             try {
                 let solution = new Solution(this.problems[problemIndex]);
-                solution.solve();
-                this.solvedSolutions.push(solution.getCompressedSolution());
+                this.solveConcurrently(solution);
             } catch (e) {
 
             } finally {

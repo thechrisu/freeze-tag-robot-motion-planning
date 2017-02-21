@@ -9,6 +9,8 @@
 const _ = require('underscore');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator');
+const fs = require('fs');
+const path = require('path');
 
 class Solution {
 
@@ -134,22 +136,13 @@ class Solution {
     }
 
     print() {
-        let s = "";
-        for(let i = 0; i < this.robotPaths.length; i++) {
-            let robotPath = this.robotPaths[i];
-            for(let j = 0; j < robotPath.length; j++) {
-                s += '(' + robotPath[j].x + ',' + robotPath[j].y + ')';
-                if(j != robotPath.length - 1) {
-                    s += ',';
-                } else {
-                    s += ';';
-                }
-            }
-        }
-        if(s[s.length - 1] == ";") {
-            s = s.substr(0, s.length - 1);
-        }
-        console.log(this.problem.problemNumber + ': ' + s);
+        console.log(this.problem.problemNumber + ': ' + this.toString());
+    }
+
+    save() {
+        fs.writeFileSync(process.cwd() + '/sol-quicksave-'
+            + this.problem.problemNumber.toString() + '.mat',
+            this.problem.problemNumber + ': ' + this.toString());
     }
 
     toString() {
