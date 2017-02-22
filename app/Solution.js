@@ -11,6 +11,7 @@ const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
 const TimSort = require('timsort');
+const ClusterSet = require('./Cluster').ClusterSet;
 
 class Solution {
 
@@ -62,19 +63,7 @@ class Solution {
     }
 
     computeOptimalPropagation(paths) {
-        console.log('> Found available paths for #' + this.problem.problemNumber + '!');
-        this.paths = paths;
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
-        this.awakeRobots = [0];
-        this.sleepingRobots = [];
-        let robotCount = this.problem.robotLocations.length;
-        for (let i = 1; i < robotCount; i++) {
-            this.sleepingRobots.push(i);
-        }
-        this.currentLocations = {0: 0};
-        this.currentPaths = {0: []};
-        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
-        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
+        let robotCount = this.setupPropagation(paths);
         this.awakeRobotCount = 1;
         while (this.awakeRobotCount < robotCount) {
             if (this.calculateRobotPaths() === false) break;
@@ -88,6 +77,23 @@ class Solution {
         this.complete = true;
     }
 
+    setupPropagation(paths) {
+        console.log('> Found available paths for #' + this.problem.problemNumber + '!');
+        this.paths = paths;
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
+        this.awakeRobots = [0];
+        this.sleepingRobots = [];
+        let robotCount = this.problem.robotLocations.length;
+        for (let i = 1; i < robotCount; i++) {
+            this.sleepingRobots.push(i);
+        }
+        this.currentLocations = {0: 0};
+        this.currentPaths = {0: []};
+        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
+        return robotCount;
+    }
+
     logPath(path) {
         console.log('Path:');
         for(let i = 0; i < path.length; i++) {
@@ -98,16 +104,60 @@ class Solution {
     calculateRobotPaths() {
         let sleepingRobotCount = this.sleepingRobots.length;
         if (sleepingRobotCount === 0) return;
-        let awakeRobotCount = this.awakeRobots.length;
 
+        // availableRobots = awakeRobots \ botsEnteringNewClusters;
+        let clusterSet = (new ClusterSet().createClusters(this.sleepingRobots));
+        let botsEnteringNewClusters = [];
+        let optionsForEnteringNewClusters = [];
+        for(let i = 0; i < clusterSet.clusters.length && botsEnteringNewClusters.length < 4; i++) {
+            let unenteredCluster = clusterSet.clusters[i];
+            let optionsForCluster = this.getGreedyOptions(this.awakeRobots, unenteredCluster.getRobots());
+            for(let j = 0; j < optionsForCluster.length; j++) {
+                let bot = null;
+                if(botsEnteringNewClusters.indexOf(bot) == -1) {
+                    botsEnteringNewClusters.push(bot);
+                    // Add bot to botsEnteringNewClusters
+                    // Get Option for bot
+                    break;
+                }
+            }
+        }
+        let allOptions = this.getGreedyOptions(this.awakeRobots, this.sleepingRobots);
+        let optionsWeActuallyUse = optionsForEnteringNewClusters + allOptions;
+        /*
+
+        1. compute mst of sleeping robots
+        2. do thing below
+         */
+        /*separate them in clusters that we have entered and that we have not entered so far
+          for each cluster that we haven't entered so far, compute getGreedyOptions([nodesInDiscoveredCluster], [nodesInNotEnteredCluster])
+          botsEnteringNewClusters = []
+          for cheapest options to enter new clusters,
+          if bot not in botsEnteringNewCluster:
+         *remove cluster from unenteredclusters
+         *unshift option to options
+         *
+         * */
+
+        if(allOptions.length === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
+            console.error('No solution! Dumping results as-is.');
+            console.error('Sleeping robots: ' + this.sleepingRobots.length + ', awake robots: ' + this.awakeRobotCount
+                + ', total: ' + this.problem.robotLocations.length);
+            return false;
+            //process.exit(1);
+        }
+
+        this.moveBots(optionsWeActuallyUse);
+    }
+
+    getGreedyOptions(awakeRobots, sleepingRobots) {
         let options = [];
-
-        for (let i = 0; i < awakeRobotCount; i++) {
-            let awakeRobot = this.awakeRobots[i];
+        for (let i = 0; i < awakeRobots.length; i++) {
+            let awakeRobot = awakeRobots[i];
             let location = this.currentLocations[awakeRobot];
-            for (let k = 0; k < sleepingRobotCount; k++) {
-                let sleepingRobot = this.sleepingRobots[k];
-                if(this.paths[location] && this.paths[location][sleepingRobot]) {
+            for (let k = 0; k < sleepingRobots.length; k++) {
+                let sleepingRobot = sleepingRobots[k];
+                if (this.paths[location] && this.paths[location][sleepingRobot]) {
                     options.push({
                         points: this.paths[location][sleepingRobot].points,
                         cost: this.paths[location][sleepingRobot].cost,
@@ -119,18 +169,13 @@ class Solution {
         }
 
         TimSort.sort(options, (o1, o2) => o1.cost - o2.cost);
+        return options;
+    }
 
+    moveBots(options) {
         let awokenRobots = [];
         let busyRobots = [];
         let optionCount = options.length;
-
-        if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
-            console.error('No solution! Dumping results as-is.');
-            console.error('Sleeping robots: ' + this.sleepingRobots.length + ', awake robots: ' + this.awakeRobotCount
-                + ', total: ' + this.problem.robotLocations.length);
-            return false;
-            //process.exit(1);
-        }
 
         for (let i = 0; i < optionCount; i++) {
             let option = options[i];
