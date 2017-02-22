@@ -61,13 +61,16 @@ process.on('message', (data) => {
         let pathStart = safeStart !== null ? safeStart : start;
         let pathEnd = safeEnd !== null ? safeEnd : end;
         let grid = new PF.Grid(data.gridMatrix);
-        path = PF.Util.smoothenPath(grid, PF.Util.compressPath(finder.findPath(
+        path = PF.Util.compressPath(finder.findPath(
             Math.round(pathStart.x),
             Math.round(pathStart.y),
             Math.round(pathEnd.x),
             Math.round(pathEnd.y),
             grid
-        )));
+        ));
+        if(path.length > 0) {
+            path = PF.Util.smoothenPath(grid, path);
+        }
     } else {
         path = [
             [start.x, start.y],
