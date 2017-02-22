@@ -43,7 +43,6 @@ process.on('message', (data) => {
 
     console.log('==> ' + startRobot + ' -> ' + endRobot + ' done');
 
-
     if (path.length === 0) {
         process.send({
             success: false,
