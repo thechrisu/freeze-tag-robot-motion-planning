@@ -1,6 +1,7 @@
 from shapely.geometry import Point, LinearRing, LineString
 import os
 import threading
+from rdp import rdp_top_level
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -79,6 +80,7 @@ class Solution(object):
         # tuples = self.answer()
         self.answer()
         path = ""
+        self.paths = list(map(lambda x: rdp_top_level(x, self.obstacles), self.paths))
         paths = list(map(self.list_of_points_to_path, self.paths))
         path = ";".join(paths)
         return (str(self.problem_number) + ':' + path).replace(" ", "")
