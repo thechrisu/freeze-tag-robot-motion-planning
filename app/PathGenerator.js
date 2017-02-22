@@ -21,8 +21,8 @@ const CREATE_SAFE_POINTS = true;
 const SAFE_POINT_SEARCH_START_RADIUS = 1;
 const MINIMUM_SAFE_POINT_OPENNESS = 3;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 20;
-const STROKE_WIDTH = 1.2;
+const CELLS_PER_UNIT = 23;
+const STROKE_WIDTH = 1.0;
 const ALPHA_CUTOFF_FACTOR = 30;
 
 const working_configs = {
