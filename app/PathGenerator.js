@@ -13,10 +13,11 @@ const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
-const MIN_COST_CUTOFF_FACTOR = 4;
+const MIN_COST_CUTOFF_FACTOR = 400;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 5;
-const STROKE_WIDTH = 0.3;
+const CELLS_PER_UNIT = 100;
+const STROKE_WIDTH = 0;
+const ALPHA_CUTOFF_FACTOR = 160;
 
 const working_configs = {
     21: {
@@ -317,7 +318,7 @@ class PathGenerator {
         for (let y = 0; y < height; y++) {
             let row = [];
             for (let x = 0; x < width; x++) {
-                let walkable = !context || context.getImageData(x, y, 1, 1).data['3'] < 5;
+                let walkable = !context || context.getImageData(x, y, 1, 1).data['3'] < ALPHA_CUTOFF_FACTOR;
                 row.push(walkable ? 0 : 1);
             }
             matrix.push(row);
