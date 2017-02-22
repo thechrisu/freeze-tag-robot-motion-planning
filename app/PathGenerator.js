@@ -16,16 +16,26 @@ const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
 const PATH_SMOOTHING = true;
-const MIN_COST_CUTOFF_FACTOR = 5;
+const MIN_COST_CUTOFF_FACTOR = 1.2;
 const CREATE_SAFE_POINTS = true;
 const SAFE_POINT_SEARCH_START_RADIUS = 1;
-const MINIMUM_SAFE_POINT_OPENNESS = 3;
+const MINIMUM_SAFE_POINT_OPENNESS = 0.05;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 23;
-const STROKE_WIDTH = 1.0;
+const CELLS_PER_UNIT = 17;
+const STROKE_WIDTH = 1.2;
 const ALPHA_CUTOFF_FACTOR = 30;
 
 const working_configs = {
+    16: {
+        PATH_SMOOTHING: true,
+        MIN_COST_CUTOFF_FACTOR: 5,
+        CREATE_SAFE_POINTS: true,
+        SAFE_POINT_SEARCH_START_RADIUS: 1,
+        MINIMUM_SAFE_POINT_OPENNESS: 3,
+        CELLS_PER_UNIT: 23,
+        STROKE_WIDTH: 1.0,
+        ALPHA_CUTOFF_FACTOR: 30,
+    },
     20: {
         PATH_SMOOTHING: true,
         MIN_COST_CUTOFF_FACTOR: 5,
@@ -151,9 +161,8 @@ class PathGenerator {
                 costs[startRobot][endRobot] = cost;
                 costs[endRobot][startRobot] = cost;
             }
-            if (minCost > overallMaxOfLocalMinCosts) overallMaxOfLocalMinCosts = minCost;
+            if (isFinite(minCost) && minCost > overallMaxOfLocalMinCosts) overallMaxOfLocalMinCosts = minCost;
         }
-
         this.searchDomains = {};
         let cutoffCost = overallMaxOfLocalMinCosts * MIN_COST_CUTOFF_FACTOR;
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
@@ -161,6 +170,7 @@ class PathGenerator {
             for (let endRobot = 0; endRobot < robotCount; endRobot++) {
                 if (!this.searchDomains[endRobot]) this.searchDomains[endRobot] = [];
                 if (this.searchDomains[startRobot].indexOf(endRobot) !== -1) continue;
+                if (!costs[startRobot][endRobot]) continue;
                 if (costs[startRobot][endRobot] < cutoffCost) {
                     this.searchDomains[startRobot].push(endRobot);
                     this.searchDomains[endRobot].push(startRobot);
@@ -183,8 +193,9 @@ class PathGenerator {
     addJobs() {
         let localJobCount = 0;
         let obstacleCount = this.problem.obstacles.length;
-        let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles) : null;
-        this.calculateScaledSafePoints(gridMatrix);
+        let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles, STROKE_WIDTH) : null;
+        let gridMatrixNoStroke = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles, 0) : null;
+        this.calculateScaledSafePoints(gridMatrix, gridMatrixNoStroke);
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
@@ -223,7 +234,7 @@ class PathGenerator {
         console.log(`--> Added all jobs! (${localJobCount} jobs)`);
     }
 
-    calculateScaledSafePoints(gridMatrix) {
+    calculateScaledSafePoints(gridMatrix, gridMatrixNoStroke) {
         let robotCount = this.problem.robotLocations.length;
         this.scaledSafePoints = {};
         let counter = 0;
@@ -231,6 +242,7 @@ class PathGenerator {
             let point = this.scalePointToProblem(this.problem.robotLocations[i]);
             this.scaledSafePoints[i] = CREATE_SAFE_POINTS ? SafePointHelper.createSafePointIfNeeded(
                     gridMatrix,
+                    gridMatrixNoStroke,
                     point,
                     SAFE_POINT_SEARCH_START_RADIUS,
                     MINIMUM_SAFE_POINT_OPENNESS
@@ -333,11 +345,12 @@ class PathGenerator {
 
     /**
      * @param {Array.<Point[]>} obstacles
+     * @param {number} strokeWidth
      * @return {Array.<Number[]>}
      */
-    generateGridMatrix(obstacles) {
+    generateGridMatrix(obstacles, strokeWidth) {
         console.log('--> Preparing grid matrix...');
-        let context = obstacles.length > 0 ? this.generateCanvasContext(obstacles) : null;
+        let context = obstacles.length > 0 ? this.generateCanvasContext(obstacles, strokeWidth) : null;
         let width = this.problemWidth * CELLS_PER_UNIT;
         let height = this.problemHeight * CELLS_PER_UNIT;
         let matrix = [];
@@ -356,15 +369,20 @@ class PathGenerator {
     /**
      *
      * @param {Array.<Point[]>} obstacles
+     * @param {number} strokeWidth
      * @return {Canvas}
      */
-    generateCanvasContext(obstacles) {
+    generateCanvasContext(obstacles, strokeWidth) {
         let canvas = new Canvas(this.problemWidth * CELLS_PER_UNIT, this.problemHeight * CELLS_PER_UNIT);
-        Visualizer.saveAsFile('problem' + this.problem.problemNumber + '-obstacles', canvas);
+        if (strokeWidth === 0) {
+            Visualizer.saveAsFile('problem' + this.problem.problemNumber + '-obstacles-no-stroke', canvas);
+        } else {
+            Visualizer.saveAsFile('problem' + this.problem.problemNumber + '-obstacles', canvas);
+        }
         let context = canvas.getContext('2d');
         let obstacleCount = obstacles.length;
         for (let i = 0; i < obstacleCount; i++) {
-            this.drawObstacle(context, obstacles[i]);
+            this.drawObstacle(context, obstacles[i], strokeWidth);
         }
         return context;
     }
@@ -373,12 +391,13 @@ class PathGenerator {
      *
      * @param {Context2d} context
      * @param {Point[]} obstacle
+     * @param {number} strokeWidth
      */
-    drawObstacle(context, obstacle) {
+    drawObstacle(context, obstacle, strokeWidth) {
         context.fillStyle = '#000';
-        if (STROKE_WIDTH > 0) {
+        if (strokeWidth > 0) {
             context.strokeStyle = '#000';
-            context.lineWidth = STROKE_WIDTH;
+            context.lineWidth = strokeWidth;
         }
         context.beginPath();
         let pointCount = obstacle.length;
@@ -388,7 +407,7 @@ class PathGenerator {
             context.lineTo(point.x, point.y);
         }
         context.closePath();
-        if (STROKE_WIDTH > 0) {
+        if (strokeWidth > 0) {
             context.stroke();
         }
         context.fill();
