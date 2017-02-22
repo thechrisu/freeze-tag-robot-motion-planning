@@ -119,18 +119,15 @@ class PathGenerator {
     }
 
     calculateSearchDomain() {
-
         let robotCount = this.problem.robotLocations.length;
         let costs = {};
         let overallMaxOfLocalMinCosts = -Infinity;
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
             let minCost = Infinity;
-            for (let endRobot = 0; endRobot < startRobot; endRobot++) {
-                if (!costs[startRobot] && !costs[endRobot]) costs[startRobot] = {};
-                if(costs[startRobot][endRobot]) {
-                    console.log(endRobot + ', ' + startRobot + ' this should never happen');
-                }
-
+            if (!costs[startRobot]) costs[startRobot] = {};
+            for (let endRobot = 0; endRobot < robotCount; endRobot++) {
+                if (startRobot === endRobot) continue;
+                if (!costs[endRobot]) costs[endRobot] = {};
                 if (costs[startRobot][endRobot]) continue;
                 let cost = PathGenerator.distanceBetweenPoints(
                     this.problem.robotLocations[startRobot],
@@ -138,6 +135,7 @@ class PathGenerator {
                 );
                 if (cost < minCost) minCost = cost;
                 costs[startRobot][endRobot] = cost;
+                costs[endRobot][startRobot] = cost;
             }
             if (minCost > overallMaxOfLocalMinCosts) overallMaxOfLocalMinCosts = minCost;
         }
@@ -145,16 +143,16 @@ class PathGenerator {
         this.searchDomains = {};
         let cutoffCost = overallMaxOfLocalMinCosts * MIN_COST_CUTOFF_FACTOR;
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
-            for (let endRobot = 0; endRobot < startRobot; endRobot++) {
-                if (!this.searchDomains[startRobot]) this.searchDomains[startRobot] = [];
-                let fromStartExists = this.searchDomains[startRobot].indexOf(endRobot) !== -1;
-                if (fromStartExists) continue;
-                if(!fromStartExists && costs[startRobot][endRobot] < cutoffCost) {
+            if (!this.searchDomains[startRobot]) this.searchDomains[startRobot] = [];
+            for (let endRobot = 0; endRobot < robotCount; endRobot++) {
+                if (!this.searchDomains[endRobot]) this.searchDomains[endRobot] = [];
+                if (this.searchDomains[startRobot].indexOf(endRobot) !== -1) continue;
+                if (costs[startRobot][endRobot] < cutoffCost) {
                     this.searchDomains[startRobot].push(endRobot);
+                    this.searchDomains[endRobot].push(startRobot);
                 }
             }
-        }
-    }
+        }    }
 
     /**
      * @param {Point} a
@@ -168,28 +166,29 @@ class PathGenerator {
     }
 
     addJobs() {
-        console.log('--> Adding jobs...');
+
         let localJobCount = 0;
         let obstacleCount = this.problem.obstacles.length;
         let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles) : null;
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
-        let searchKeys = Object.keys(this.searchDomains);
-        for (let i = 0; i < searchKeys.length; i++) {
-            let startRobot = searchKeys[i];
+        for (let startRobot = 0; startRobot < robotCount; startRobot++) {
             let searchDomain = this.searchDomains[startRobot];
             let searchDomainLength = searchDomain.length;
             console.log('Adding... ' + (startRobot) + ' of ' + robotCount + ', ' + searchDomainLength);
             for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
                 let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
-                if (startRobot === endRobot) continue; //should never happen?
+                if (processedPaths[endRobot] === undefined) processedPaths[endRobot] = {};
+
+                if (startRobot === endRobot) continue;
                 if (processedPaths[startRobot][endRobot] === true) continue;
 
                 localJobCount++;
                 this.jobCount++;
 
                 processedPaths[startRobot][endRobot] = true;
+                processedPaths[endRobot][startRobot] = true;
 
                 let dataObject = {
                     safePoints: CREATE_SAFE_POINTS,
@@ -273,22 +272,10 @@ class PathGenerator {
             pointPath[0].y = this.problem.robotLocations[startRobot].y;
             pointPath[pointCount - 1].x = this.problem.robotLocations[endRobot].x;
             pointPath[pointCount - 1].y = this.problem.robotLocations[endRobot].y;
-            let s,l;
-            if(startRobot > endRobot) {
-                l = startRobot;
-                s = endRobot;
-            } else {
-                l = endRobot;
-                s = startRobot;
-            }
             if (this.paths[startRobot] === undefined) this.paths[startRobot] = {};
             if (this.paths[endRobot] === undefined) this.paths[endRobot] = {};
-            if(this.paths[startRobot][endRobot] || this.paths[endRobot][startRobot]) {
-                console.log('this should never be called, redundancies exist! start: ' + startRobot + ' end: ' + endRobot);
-            }
-            this.paths[l][s] = new Path(pointPath, pathLength, startRobot, endRobot);
-            this.paths[s][l] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
-
+            this.paths[startRobot][endRobot] = new Path(pointPath, pathLength, startRobot, endRobot);
+            this.paths[endRobot][startRobot] = new Path(pointPath.slice(0).reverse(), pathLength, startRobot, endRobot);
         }
 
         if (this.jobCount <= 0) {
