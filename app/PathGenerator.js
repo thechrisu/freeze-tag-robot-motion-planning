@@ -256,6 +256,8 @@ class PathGenerator {
 
     registerPath(data) {
 
+        console.log(this.jobCount);
+
         if (data.success) {
 
             let startRobot = data.startRobot;
