@@ -10,6 +10,7 @@ const PF = require('pathfinding');
 const path = require('path');
 const Canvas = require('canvas');
 const Point = require('./CoordinateHelper').Point;
+const Visualizer = require('./Visualizer').Visualizer;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
@@ -91,9 +92,9 @@ class PathGenerator {
             this.updateBoundaries(this.problem.robotLocations[k]);
         }
         for (let j = 0; j < obstacleCount; j++) {
-            let pointCount = this.problem.obstacles[j];
+            let pointCount = this.problem.obstacles[j].length;
             for (let k = 0; k < pointCount; k++) {
-                this.updateBoundaries(this.problem.obstacles[j][k])
+                this.updateBoundaries(this.problem.obstacles[j][k]);
             }
         }
     }
@@ -336,6 +337,7 @@ class PathGenerator {
      */
     generateCanvasContext(obstacles) {
         let canvas = new Canvas(this.problemWidth * CELLS_PER_UNIT, this.problemHeight * CELLS_PER_UNIT);
+        Visualizer.saveAsFile('problem' + this.problem.problemNumber + '-obstacles', canvas);
         let context = canvas.getContext('2d');
         let obstacleCount = obstacles.length;
         for (let i = 0; i < obstacleCount; i++) {
