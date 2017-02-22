@@ -23,6 +23,8 @@ class SafePointHelper {
         let y = Math.round(point.y);
         if (gridMatrix[y][x] === 1) {
             let safePoint = null;
+            let previousLayer = null;
+            let previousLayerMax = 0;
             while (safePoint === null) {
                 let arraySize = radius * 8;
                 let initialOpenness = SafePointHelper.initialiseArray(arraySize, 0);
@@ -37,6 +39,9 @@ class SafePointHelper {
                 let openCount = 0;
                 let updateOpenness = (x, y) => {
                     points[openIndex] = new Point(x, y);
+                    if(!gridMatrix[y]) {
+                        throw new Error('Could not find a safe point!');
+                    }
                     if (gridMatrix[y][x] === 0) {
                         initialOpenness[openIndex] = 1;
                         openCount++;
@@ -79,11 +84,24 @@ class SafePointHelper {
                 let maxOpenness = -Infinity;
                 let index = null;
 
+                let prevLayerWeight = SafePointHelper.initialiseArray(arraySize, 0);
+                if (previousLayer !== null && previousLayerMax > 0) {
+                    let prevLayerSize = previousLayer.length;
+                    let ratio = prevLayerSize / arraySize;
+                    for(let i = 0; i < arraySize; i++) {
+                        let k = Math.round(i * ratio) % prevLayerSize;
+                        prevLayerWeight[i] = previousLayer[k] / previousLayerMax;
+                    }
+                }
+
+                let totalOpenness = [];
                 for (let i = 0; i < arraySize; i++) {
                     let openness = 0;
                     for (let k = 0; k < opennessIterations; k++) {
                         openness += parseInt(opennessArrays[k][i], 10);
                     }
+                    openness *= (0.25 + 0.75 * prevLayerWeight[i]);
+                    totalOpenness.push(openness);
                     if (openness > maxOpenness) {
                         maxOpenness = openness;
                         index = i;
@@ -93,6 +111,8 @@ class SafePointHelper {
                 if (index !== null && maxOpenness > minimumOpenness) {
                     safePoint = points[index];
                 }
+                previousLayer = totalOpenness;
+                previousLayerMax = maxOpenness;
             }
             return safePoint;
         }
