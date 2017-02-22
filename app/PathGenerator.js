@@ -14,12 +14,12 @@ const Visualizer = require('./Visualizer').Visualizer;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
-const MIN_COST_CUTOFF_FACTOR = 400;
+const MIN_COST_CUTOFF_FACTOR = 4;
 const CREATE_SAFE_POINTS = true;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 7;
-const STROKE_WIDTH = 0;
-const ALPHA_CUTOFF_FACTOR = 160;
+const CELLS_PER_UNIT = 9;
+const STROKE_WIDTH = 0.2;
+const ALPHA_CUTOFF_FACTOR = 40;
 
 const working_configs = {
     21: {

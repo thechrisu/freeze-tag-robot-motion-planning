@@ -61,14 +61,13 @@ process.on('message', (data) => {
         let pathStart = safeStart !== null ? safeStart : start;
         let pathEnd = safeEnd !== null ? safeEnd : end;
         let grid = new PF.Grid(data.gridMatrix);
-        path = PF.Util.compressPath(finder.findPath(
+        path = PF.Util.smoothenPath(grid, PF.Util.compressPath(finder.findPath(
             Math.round(pathStart.x),
             Math.round(pathStart.y),
             Math.round(pathEnd.x),
             Math.round(pathEnd.y),
             grid
-        ));
-        console.log(path);
+        )));
     } else {
         path = [
             [start.x, start.y],
@@ -80,7 +79,6 @@ process.on('message', (data) => {
         if(safeStart !== null) path.unshift([start.x, start.y]);
         if(safeEnd !== null) {
             path.push([end.x, end.y]);
-            console.log('used safe end point');
         }
     }
 

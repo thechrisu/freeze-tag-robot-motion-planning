@@ -52,9 +52,7 @@ class Solution {
         this.complete = false;
         let generator = new PathGenerator(this.problem);
         if(!this.paths) {
-            generator.calculatePaths((paths) => {
-                this.computeOptimalPropagation(paths);
-            });
+            generator.calculatePaths(this.computeOptimalPropagation);
         } else {
             this.computeOptimalPropagation(this.paths);
         }
