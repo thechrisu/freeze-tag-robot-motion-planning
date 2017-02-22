@@ -21,7 +21,7 @@ class SafePointHelper {
     static createSafePointIfNeeded(gridMatrix, point, radius, minimumOpenness) {
         let x = Math.round(point.x);
         let y = Math.round(point.y);
-        if (gridMatrix[x][y] === 1) {
+        if (gridMatrix[y][x] === 1) {
             let safePoint = null;
             while (safePoint === null) {
                 let arraySize = radius * 8;
@@ -37,7 +37,7 @@ class SafePointHelper {
                 let openCount = 0;
                 let updateOpenness = (x, y) => {
                     points[openIndex] = new Point(x, y);
-                    if (gridMatrix[x][y] === 0) {
+                    if (gridMatrix[y][x] === 0) {
                         initialOpenness[openIndex] = 1;
                         openCount++;
                     } else {
