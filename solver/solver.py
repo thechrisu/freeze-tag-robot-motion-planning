@@ -64,11 +64,11 @@ class Solution(object):
             self.distances[self.point_to_key(robot)] = []
             for reach in self.robots:
                 if robot is reach:
-                    self.distances[self.point_to_key(robot)].append(
-                        tuple((reach, float("inf"))))
+                    pass
                 else:
                     self.distances[self.point_to_key(robot)].append(
                         tuple((reach, robot.distance(reach))))
+            self.distances[self.point_to_key(robot)].sort(key=lambda x: x[1], reverse=True)
 
     def list_of_points_to_path(self, points):
         return (str(self.convert_points_to_tuples(points))[1:-1]).replace("'", "").replace("'", "")
@@ -93,15 +93,6 @@ class Solution(object):
             self.paths.append(unique_path)
 
     def answer(self):
-        # start = self.robots[0]
-        # self.path.append(start)
-        #
-        # for robot in self.robots[1:]:
-        #     self.reach_robot(start, robot)
-        #     start = robot
-        #
-        # return self.convert_points_to_tuples(self.path)
-
         del self.left[self.point_to_key(self.robots[0])]
         self.reach_closest_robot(self.robots[0], [self.robots[0]])
 
@@ -114,25 +105,22 @@ class Solution(object):
 
     def find_closest_robot(self, start):
         with self.lock:
-            closest_robot, minimum_dist = None, float("inf")
-            for (robot, distance) in self.distances[self.point_to_key(start)]:
-                if self.point_to_key(robot) in self.left and distance < minimum_dist:
-                    minimum_dist = distance
-                    closest_robot = robot
-            if closest_robot:
-                del self.left[self.point_to_key(closest_robot)]
-            return closest_robot
+            distances = self.distances[self.point_to_key(start)]
+            if distances:
+                while distances:
+                    closest_robot, minimum_dist = distances.pop()
+                    if self.point_to_key(closest_robot) in self.left:
+                        del self.left[self.point_to_key(closest_robot)]
+                        return closest_robot
+
+            return None
 
     def reach_closest_robot(self, start, current_path):
-        print("Reach closest robot", list(start.coords), self.convert_points_to_tuples(current_path))
         robot = self.find_closest_robot(start)
         if not robot:
-            if current_path:
+            if len(current_path) > 1:
                 self.paths.append(current_path)
                 # self.remove_duplicates_and_append(current_path)
-            return
-
-        if robot == start:
             return
 
         while start:
@@ -147,13 +135,14 @@ class Solution(object):
 
         t1.join()
         t2.join()
+        print(len(self.left))
+        # self.reach_closest_robot(robot, [robot])
 
     def reach_robot(self, start, robot, current_path):
         p = LineString([(start.x, start.y), (robot.x, robot.y)])
         closest_intersection = None
-        print("REACH ROBOT", list(start.coords), list(robot.coords))
+        # print("REACH ROBOT", list(start.coords), list(robot.coords))
         if start == robot:
-            print("Same ROBOT")
             return None
 
         for obstacle in self.obstacles:
@@ -163,6 +152,8 @@ class Solution(object):
                 temp = list(intersection)
                 intersect_start = temp[0]
                 intersect_end = temp[-1]
+                if start.distance(intersect_start) > start.distance(intersect_end):
+                    intersect_start, intersect_end = intersect_end, intersect_start
                 if closest_intersection:
                     if start.distance(intersect_start) < start.distance(closest_intersection[0]):
                         closest_intersection = (intersect_start, intersect_end, obstacle)
@@ -189,7 +180,6 @@ class Solution(object):
             if point.distance(edge) < 1e-14:
                 return i-1, i
 
-        print(distances)
         raise "Point not found"
 
     def find_points_from_obstacle(self, entry, exit, obstacle):
@@ -211,9 +201,10 @@ class Solution(object):
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
 
-        # print([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit])
+        print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
+        # return self.convert_tuples_to_points(intermediate_nodes)
 
 robots_file = open('robots.mat', 'r')
 for line in robots_file.readlines():
