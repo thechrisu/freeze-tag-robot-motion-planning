@@ -16,7 +16,7 @@ const childProcess = require('child_process');
 const MIN_COST_CUTOFF_FACTOR = 400;
 const CREATE_SAFE_POINTS = true;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 100;
+const CELLS_PER_UNIT = 7;
 const STROKE_WIDTH = 0;
 const ALPHA_CUTOFF_FACTOR = 160;
 
@@ -178,7 +178,7 @@ class PathGenerator {
             let startRobot = searchKeys[i];
             let searchDomain = this.searchDomains[startRobot];
             let searchDomainLength = searchDomain.length;
-            console.log('Adding... ' + (startRobot + 1) + ' of ' + robotCount + ', ' + searchDomainLength);
+            console.log('Adding... ' + (startRobot) + ' of ' + robotCount + ', ' + searchDomainLength);
             for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
                 let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
