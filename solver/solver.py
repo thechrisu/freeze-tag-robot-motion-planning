@@ -182,6 +182,13 @@ class Solution(object):
 
         raise "Point not found"
 
+    def find_length_of_path(self, tuple_points):
+        points = self.convert_tuples_to_points(tuple_points)
+        distance = 0
+        for i in range(1, len(points)):
+            distance += points[i].distance(points[i-1])
+        return distance
+
     def find_points_from_obstacle(self, entry, exit, obstacle):
         coords = list(obstacle.coords)
         coords.append(coords[0])
@@ -194,9 +201,13 @@ class Solution(object):
 
         # if we hit entry first
         if s1 < e1:
-            intermediate_nodes = coords[s2:e1+1]
+            p1 = coords[s2:e1+1]
+            p2 = list(reversed(coords[e1+1:] + coords[:s2]))
+            intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
         else:
-            intermediate_nodes = list(reversed(coords[e2:s1+1]))
+            p1 = list(reversed(coords[e2:s1+1]))
+            p2 = coords[s1+1:] + coords[:e2]
+            intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
 
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
