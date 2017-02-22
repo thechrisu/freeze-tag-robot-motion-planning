@@ -24,6 +24,7 @@ class Solver {
         if(solutions_with_skipped_first_part_dict) {
             this.solutions_with_skipped_first_part_dict = solutions_with_skipped_first_part_dict;
         }
+        this.isSavingIntermediate = false;
     }
 
     solveConcurrently(solution) {
@@ -59,6 +60,9 @@ class Solver {
             }
             solution.solve();
             this.solvedSolutions.push(solution.getCompressedSolution());
+            if(this.isSavingIntermediate) {
+                solution.save();
+            }
         } catch (e) {
             console.error(e);
             console.error(e.stack);
@@ -71,13 +75,17 @@ class Solver {
         return this.solvedSolutions;
     }
 
+    setSavingIntermediate(isSavingIntermediate) {
+        this.isSavingIntermediate = isSavingIntermediate;
+    }
+
     /**
      * @param {string} filePath
      */
     exportToFile(filePath) {
         let output = [GROUP_NAME, GROUP_PASS, ''].join('\n');
         for (let i = 0; i < this.solvedSolutions.length; i++) {
-            output += this.solvedSolutions[i].problemNumber + ': ' + this.solvedSolutions[i].toString() + '\n';
+            output += this.solvedSolutions[i].problem.problemNumber + ': ' + this.solvedSolutions[i].toString() + '\n';
         }
         fs.writeFileSync(filePath, output);
     }

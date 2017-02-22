@@ -11,15 +11,16 @@ const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
 const PROBLEM_FILE = './robots.mat';
-const PATHS_FILE = 'paths.mat';
 const SOLUTION_FILE = './solution.mat';
 const MANUAL_FILE = 'solutions/bruteforce.mat';
 
-function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths) {
+function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths, isSavingIntermediate) {
     ProblemSet.importFromFile(PROBLEM_FILE, (problems) => {
         let solver = new Solver(problems);
+        solver.setSavingIntermediate(isSavingIntermediate);
         if(isImportingPaths) {
-            ProblemSolutionSynthesizer.pathsSolutionsFromFile(problems, PATHS_FILE, (solutions_dict) => {
+            console.log('is importing paths...');
+            ProblemSolutionSynthesizer.pathsSolutionsFromFile(problems, (solutions_dict) => {
                 solver = new Solver(problems, solutions_dict);
             });
         }
@@ -34,7 +35,7 @@ function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, i
         }
         if (isExportingPaths) {
             let solutions = solver.getSolutions();
-            ProblemSolutionSynthesizer.exportPaths(PATHS_FILE, solutions);
+            ProblemSolutionSynthesizer.exportPaths(solutions);
         }
         solver.exportToFile(SOLUTION_FILE);
     });
@@ -65,7 +66,8 @@ program.command('*')
     .description('Our solutions. Sorry for the crappy docstring here. all | [1,2,17] for solving all/selected problems. ' +
         '-v | --visualize for visualizations' +
         '-p | --paths (format specified): Skips the path generation stage for the paths found. Then solves those solutions with paths' +
-        '-sp | --save-paths (format specified): Saves paths which it computed solutions for')
+        '-sp | --save-paths (format specified): Saves paths which it computed solutions for' +
+        '-i | --intermediate-save Saves solutions straight after solving them')
     .action(function(mode, options) {
         if(mode == "manual") {
             visualizeProblemSolution();
@@ -75,7 +77,8 @@ program.command('*')
             let isVisualizing = process.argv.indexOf("-v") != -1 || process.argv.indexOf("--visualize") != -1;
             let isImportingPaths = process.argv.indexOf("-p") != -1 || process.argv.indexOf("--paths") != -1;
             let isExportingPaths = process.argv.indexOf("-sp") != -1 || process.argv.indexOf("--save-paths") != -1;
-            solveWrapper(isVisualizing, selectedProblems, isSolvingAll, isImportingPaths, isExportingPaths);
+            let isSavingIntermediate = process.argv.indexOf("-i") != -1 || process.argv.indexOf("--intermediate-save") != -1;
+            solveWrapper(isVisualizing, selectedProblems, isSolvingAll, isImportingPaths, isExportingPaths, isSavingIntermediate);
         }
     });
 

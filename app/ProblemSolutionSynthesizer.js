@@ -87,6 +87,11 @@ class ProblemSolutionSynthesizer {
         });
     }
 
+    /**
+     * @param pathsFilePath
+     * @param callback
+     * @deprecated
+     */
     static importPathSetFromFile(pathsFilePath, callback) {
         var lineReader = readline.createInterface({
             input: fs.createReadStream(path.join(process.cwd(), pathsFilePath)),
@@ -117,18 +122,18 @@ class ProblemSolutionSynthesizer {
         });
     }
 
-    static pathsSolutionsFromFile(problems, pathsFilePath, callback) {
-        ProblemSolutionSynthesizer.importPathSetFromFile(pathsFilePath, (paths) => {
-            let real_solutions = {};
-            for(let i = 0; i < problems.length; i++) { //problems, solutions length <= 30 so no biggie
-                let prob_num = problems[i].problemNumber;
-                let prob_nums = Object.keys(paths);
-                if(JSON.stringify(prob_num) in prob_nums) {
-                    real_solutions[prob_num] = new Solution(problems[i], undefined, paths[prob_num]);
-                }
+    static pathsSolutionsFromFile(problems, callback) {
+        let real_solutions = {};
+        let paths = [];
+        for(let i = 0; i < problems.length; i++) {
+            let prob_num = problems[i].problemNumber;
+            let fn = 'path' + prob_num + '.json';
+            if(fs.existsSync(fn)) {
+                let p = JSON.parse(fs.readFileSync(fn, 'utf8'));
+                real_solutions[prob_num] = new Solution(problems[i], undefined, p);
             }
-            callback(real_solutions);
-        });
+        }
+        callback(real_solutions);
     }
 
     static getPathsJSON(solution) {
@@ -136,19 +141,19 @@ class ProblemSolutionSynthesizer {
         for(let i = 0; i < solution.problem.robotLocations.length; i++) {
             ret[i] = {};
             for(let j = 0; j < solution.problem.robotLocations.length; j++) {
-                ret[i][j] = solution.paths[i][j].toJson();
+                if(solution.paths[i] && solution.paths[i][j]) {
+                    ret[i][j] = solution.paths[i][j].toJson();
+                }
             }
         }
         return JSON.stringify(ret);
     }
 
-    static exportPaths(pathsFilePath, solutions) {
+    static exportPaths(solutions) {
         console.log('exporting paths');
-        let output = "";
         for (let i = 0; i < solutions.length; i++) {
-            output += solutions[i].problem.problemNumber + ': ' + ProblemSolutionSynthesizer.getPathsJSON(solutions[i]) + '\n';
+            fs.writeFileSync('path' + solutions[i].problem.problemNumber + '.json', ProblemSolutionSynthesizer.getPathsJSON(solutions[i]));
         }
-        fs.writeFileSync(pathsFilePath, output);
     }
 }
 

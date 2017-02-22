@@ -194,12 +194,21 @@ class Visualizer {
         }
     }
 
-    static drawRobotLocations(points, ctx, scale) {
-        ctx.fillStyle = 'black';
+    static drawRobotLocations(points, ctx, scale, isAwake) {
+        if(isAwake) {
+            ctx.fillStyle = 'black';
+        } else {
+            ctx.fillStyle = 'red';
+        }
+        let f = 1.0;
+        if(!isAwake) {
+            f = 2.0;
+        }
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
-            ctx.fillRect(sp.x - 0.5 * DOT_SIZE, sp.y - 0.5 * DOT_SIZE, DOT_SIZE, DOT_SIZE);
+            ctx.fillRect(sp.x - 0.5 * f * DOT_SIZE, sp.y - 0.5 * f * DOT_SIZE, f * DOT_SIZE, f * DOT_SIZE);
         }
+        ctx.fillStyle = 'black';
     }
 
     static saveAsFile(filename, canvas) {
@@ -226,6 +235,27 @@ class Visualizer {
         return {canvas: canvas, ctx: ctx};
     }
 
+    static getAsleepRobots(allRobots, awakeRobots) {
+        if(!awakeRobots) {
+            return [];
+        }
+        let asleepRobots = [];
+        for(let i = 0; i < allRobots.length; i++) {
+            let bot = allRobots[i];
+            let isAwake = false;
+            for(let j = 0; j < awakeRobots.length; j++) {
+                let a_bot = awakeRobots[j];
+                if(i == a_bot) {
+                    isAwake = true;
+                }
+            }
+            if(!isAwake) {
+                asleepRobots.push(bot);
+            }
+        }
+        return asleepRobots;
+    }
+
     /**
      * This is the function you're looking for
      */
@@ -235,7 +265,21 @@ class Visualizer {
         let cv = this.setupCanvas(scale);
         var canvas = cv.canvas; //Hacky due to canvas :(
         var ctx = cv.ctx;
-        Visualizer.drawRobotLocations(solutionObj.problem.robotLocations, ctx, scale);
+        let black_robots_to_draw = [];
+        if(!solutionObj.awakeRobots) {
+            black_robots_to_draw = solutionObj.problem.robotLocations;
+        } else {
+            let black_robots_locations = [];
+            for(let i = 0; i < solutionObj.awakeRobots.length; i++) {
+                black_robots_locations.push(solutionObj.problem.robotLocations[solutionObj.awakeRobots[i]]);
+            }
+            black_robots_to_draw = black_robots_locations;
+        }
+        Visualizer.drawRobotLocations(black_robots_to_draw, ctx, scale, true);
+        let asleepRobots = Visualizer.getAsleepRobots(solutionObj.problem.robotLocations, solutionObj.awakeRobots);
+        if(asleepRobots.length > 0) {
+            Visualizer.drawRobotLocations(asleepRobots, ctx, scale, false);
+        }
         Visualizer.drawObstacles(solutionObj.problem.obstacles, ctx, scale);
         Visualizer.drawRobotPaths(solutionObj.robotPaths, ctx, scale);
         Visualizer.saveAsFile(filename, canvas);
