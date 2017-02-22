@@ -17,7 +17,7 @@ let finder = new PF.AStarFinder({
 let createSafePointIfNeeded = (gridMatrix, point) => {
     let x = Math.round(point.x);
     let y = Math.round(point.y);
-    if (gridMatrix[x][y] === 1) {
+    if (gridMatrix[y][x] === 1) {
         let radius = 1;
         let safePoint = null;
         safeFinder: while (safePoint === null) {
@@ -28,7 +28,7 @@ let createSafePointIfNeeded = (gridMatrix, point) => {
             for (let sx = minX; sx <= maxX; sx++) {
                 for (let sy = minY; sy <= maxY; sy++) {
                     if ((sx < maxX || sx > minX) && (sy < maxY || sy > minY)) continue;
-                    if (gridMatrix[sx][sy] === 0) {
+                    if (gridMatrix[sy][sx] === 0) {
                         safePoint = new Point(sx, sy);
                         break safeFinder;
                     }
