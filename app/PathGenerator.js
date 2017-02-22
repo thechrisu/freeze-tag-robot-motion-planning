@@ -14,12 +14,12 @@ const Visualizer = require('./Visualizer').Visualizer;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
-const MIN_COST_CUTOFF_FACTOR = 4;
+const MIN_COST_CUTOFF_FACTOR = 3;
 const CREATE_SAFE_POINTS = true;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 9;
-const STROKE_WIDTH = 0.2;
-const ALPHA_CUTOFF_FACTOR = 40;
+const CELLS_PER_UNIT = 10;
+const STROKE_WIDTH = 0.0;
+const ALPHA_CUTOFF_FACTOR = 100;
 
 const working_configs = {
     21: {
@@ -254,8 +254,6 @@ class PathGenerator {
     }
 
     registerPath(data) {
-
-        console.log(this.jobCount);
 
         if (data.success) {
 

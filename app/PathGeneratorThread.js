@@ -17,7 +17,7 @@ let finder = new PF.AStarFinder({
 let createSafePointIfNeeded = (gridMatrix, point) => {
     let x = Math.round(point.x);
     let y = Math.round(point.y);
-    if (gridMatrix[y][x] === 1) {
+    if (gridMatrix[x][y] === 1) {
         let radius = 1;
         let safePoint = null;
         safeFinder: while (safePoint === null) {
@@ -27,8 +27,17 @@ let createSafePointIfNeeded = (gridMatrix, point) => {
             let maxY = y + radius;
             for (let sx = minX; sx <= maxX; sx++) {
                 for (let sy = minY; sy <= maxY; sy++) {
-                    if ((sx < maxX || sx > minX) && (sy < maxY || sy > minY)) continue;
-                    if (gridMatrix[sy][sx] === 0) {
+                    if(sy !== maxY && sy !== minY) {
+                        if(sx < maxX || sx > minX) {
+                            continue;
+                        }
+                    }
+                    if(sx !== maxX && sx !== minX) {
+                        if(sy < maxY || sy > minY) {
+                            continue;
+                        }
+                    }
+                    if (gridMatrix[sx][sy] === 0) {
                         safePoint = new Point(sx, sy);
                         break safeFinder;
                     }
@@ -52,12 +61,12 @@ process.on('message', (data) => {
 
     console.log('==> ' + startRobot + ' -> ' + endRobot + ' strt');
 
-    let safeStart = safePoints ? createSafePointIfNeeded(data.gridMatrix, start) : null;
-    let safeEnd = safePoints ? createSafePointIfNeeded(data.gridMatrix, end) : null;
 
     let path;
 
     if (obstacleCount > 0) {
+        let safeStart = safePoints ? createSafePointIfNeeded(data.gridMatrix, start) : null;
+        let safeEnd = safePoints ? createSafePointIfNeeded(data.gridMatrix, end) : null;
         let pathStart = safeStart !== null ? safeStart : start;
         let pathEnd = safeEnd !== null ? safeEnd : end;
         let grid = new PF.Grid(data.gridMatrix);
@@ -68,21 +77,18 @@ process.on('message', (data) => {
             Math.round(pathEnd.y),
             grid
         ));
-        if(path.length > 0) {
+        if (path.length > 0) {
             path = PF.Util.smoothenPath(grid, path);
+            if (safeStart !== null) path.unshift([start.x, start.y]);
+            if (safeEnd !== null) {
+                path.push([end.x, end.y]);
+            }
         }
     } else {
         path = [
             [start.x, start.y],
             [end.x, end.y],
         ]
-    }
-
-    if(safePoints) {
-        if(safeStart !== null) path.unshift([start.x, start.y]);
-        if(safeEnd !== null) {
-            path.push([end.x, end.y]);
-        }
     }
 
     console.log('==> ' + startRobot + ' -> ' + endRobot + ' done');
