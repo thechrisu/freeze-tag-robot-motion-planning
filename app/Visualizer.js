@@ -202,7 +202,7 @@ class Visualizer {
         }
         let f = 1.0;
         if(!isAwake) {
-            f = 1.4;
+            f = 2.0;
         }
         for (var i = 0; i < points.length; i++) {
             var sp = Visualizer.getScaledPoint(points[i], scale);
@@ -245,7 +245,7 @@ class Visualizer {
             let isAwake = false;
             for(let j = 0; j < awakeRobots.length; j++) {
                 let a_bot = awakeRobots[j];
-                if(bot.x == a_bot.x && bot.y == a_bot.y) {
+                if(i == a_bot) {
                     isAwake = true;
                 }
             }
@@ -269,7 +269,11 @@ class Visualizer {
         if(!solutionObj.awakeRobots) {
             black_robots_to_draw = solutionObj.problem.robotLocations;
         } else {
-            black_robots_to_draw = solutionObj.awakeRobots;
+            let black_robots_locations = [];
+            for(let i = 0; i < solutionObj.awakeRobots.length; i++) {
+                black_robots_locations.push(solutionObj.problem.robotLocations[solutionObj.awakeRobots[i]]);
+            }
+            black_robots_to_draw = black_robots_locations;
         }
         Visualizer.drawRobotLocations(black_robots_to_draw, ctx, scale, true);
         let asleepRobots = Visualizer.getAsleepRobots(solutionObj.problem.robotLocations, solutionObj.awakeRobots);
