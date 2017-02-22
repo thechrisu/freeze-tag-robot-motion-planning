@@ -11,15 +11,19 @@ const path = require('path');
 const Canvas = require('canvas');
 const Point = require('./CoordinateHelper').Point;
 const Visualizer = require('./Visualizer').Visualizer;
+const SafePointHelper = require('./SafePointHelper');
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
+const PATH_SMOOTHING = true;
 const MIN_COST_CUTOFF_FACTOR = 4;
 const CREATE_SAFE_POINTS = true;
+const SAFE_POINT_SEARCH_START_RADIUS = 3;
+const MINIMUM_SAFE_POINT_OPENNESS = 15;
 const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 9;
-const STROKE_WIDTH = 0.2;
-const ALPHA_CUTOFF_FACTOR = 40;
+const STROKE_WIDTH = 0.5;
+const ALPHA_CUTOFF_FACTOR = 30;
 
 const working_configs = {
     21: {
@@ -152,7 +156,8 @@ class PathGenerator {
                     this.searchDomains[endRobot].push(startRobot);
                 }
             }
-        }    }
+        }
+    }
 
     /**
      * @param {Point} a
@@ -166,10 +171,10 @@ class PathGenerator {
     }
 
     addJobs() {
-
         let localJobCount = 0;
         let obstacleCount = this.problem.obstacles.length;
         let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles) : null;
+        this.calculateScaledSafePoints(gridMatrix);
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
         for (let startRobot = 0; startRobot < robotCount; startRobot++) {
@@ -191,12 +196,14 @@ class PathGenerator {
                 processedPaths[endRobot][startRobot] = true;
 
                 let dataObject = {
-                    safePoints: CREATE_SAFE_POINTS,
+                    smoothing: PATH_SMOOTHING,
                     obstacleCount,
                     startRobot,
                     endRobot,
                     start: this.scalePointToProblem(this.problem.robotLocations[startRobot]),
+                    safeStart: this.scaledSafePoints[startRobot],
                     end: this.scalePointToProblem(this.problem.robotLocations[endRobot]),
+                    safeEnd: this.scaledSafePoints[endRobot],
                     gridMatrix,
                 };
                 this.calculateUsingThread(dataObject);
@@ -204,6 +211,20 @@ class PathGenerator {
             }
         }
         console.log(`--> Added all jobs! (${localJobCount} jobs)`);
+    }
+
+    calculateScaledSafePoints(gridMatrix) {
+        let robotCount = this.problem.robotLocations.length;
+        this.scaledSafePoints = {};
+        for (let i = 0; i < robotCount; i++) {
+            let point = this.scalePointToProblem(this.problem.robotLocations[i]);
+            this.scaledSafePoints[i] = CREATE_SAFE_POINTS ? SafePointHelper.createSafePointIfNeeded(
+                gridMatrix,
+                point,
+                SAFE_POINT_SEARCH_START_RADIUS,
+                MINIMUM_SAFE_POINT_OPENNESS
+            ) : null;
+        }
     }
 
     calculateUsingThread(data) {
@@ -254,8 +275,6 @@ class PathGenerator {
     }
 
     registerPath(data) {
-
-        console.log(this.jobCount);
 
         if (data.success) {
 
@@ -354,7 +373,7 @@ class PathGenerator {
             context.lineTo(point.x, point.y);
         }
         context.closePath();
-        if(STROKE_WIDTH > 0) {
+        if (STROKE_WIDTH > 0) {
             context.stroke();
         }
         context.fill();
