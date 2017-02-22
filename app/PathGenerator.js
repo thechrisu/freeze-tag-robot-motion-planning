@@ -13,6 +13,7 @@ const Point = require('./CoordinateHelper').Point;
 const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
+const CREATE_SAFE_POINTS = true;
 const MIN_COST_CUTOFF_FACTOR = 4;
 const THREAD_FILE = 'PathGeneratorThread.js';
 const CELLS_PER_UNIT = 5;
@@ -189,6 +190,7 @@ class PathGenerator {
                 processedPaths[startRobot][endRobot] = true;
 
                 let dataObject = {
+                    safePoints: CREATE_SAFE_POINTS,
                     obstacleCount,
                     startRobot,
                     endRobot,
