@@ -52,9 +52,11 @@ class Solution(object):
         self.generate_distance_matrix()
         self.left = {}
         self.lock = threading.Lock()
+        self.robots_map = {}
 
         for robot in self.robots:
             self.left[self.point_to_key(robot)] = None
+            self.robots_map[self.point_to_key(robot)] = None
 
     def point_to_key(self, point):
         return list(point.coords)[0]
@@ -78,8 +80,8 @@ class Solution(object):
         self.answer()
         path = ""
         paths = list(map(self.list_of_points_to_path, self.paths))
-        path = "; ".join(paths)
-        return str(self.problem_number) + ':' + path
+        path = ";".join(paths)
+        return (str(self.problem_number) + ':' + path).replace(" ", "")
 
     def remove_duplicates_and_append(self, path):
         unique_path = [path[0]]
@@ -98,7 +100,15 @@ class Solution(object):
 
     def convert_points_to_tuples(self, points):
         # return [(point.x/10000, point.y/10000) for point in points]
-        return [("{0:.16f}".format(point.x), "{0:.16f}".format(point.y)) for point in points]
+        new_points = []
+        for point in points:
+            if self.point_to_key(point) in self.robots_map:
+                new_points.append(tuple(("{0:.16f}".format(point.x), "{0:.16f}".format(point.y))))
+            else:
+                new_points.append(tuple(("{0:.10f}".format(point.x), "{0:.10f}".format(point.y))))
+
+        return new_points
+        # return [("{0:.11f}".format(point.x), "{0:.11f}".format(point.y)) for point in points]
 
     def convert_tuples_to_points(self, points):
         return [Point(x, y) for x, y in points]
@@ -201,13 +211,15 @@ class Solution(object):
 
         # if we hit entry first
         if s1 < e1:
-            p1 = coords[s2:e1+1]
-            p2 = list(reversed(coords[e1+1:] + coords[:s2]))
-            intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
+            # p1 = coords[s2:e1+1]
+            # p2 = list(reversed(coords[e1+1:] + coords[:s2]))
+            # intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
+            intermediate_nodes = coords[s2:e1+1]
         else:
-            p1 = list(reversed(coords[e2:s1+1]))
-            p2 = coords[s1+1:] + coords[:e2]
-            intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
+            # p1 = list(reversed(coords[e2:s1+1]))
+            # p2 = coords[s1+1:] + coords[:e2]
+            # intermediate_nodes = min(p1, p2, key=self.find_length_of_path)
+            intermediate_nodes = list(reversed(coords[e2:s1+1]))
 
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
