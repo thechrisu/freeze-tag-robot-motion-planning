@@ -11,7 +11,6 @@ const Viz = require('./app/Visualizer');
 const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
 const PROBLEM_FILE = './robots.mat';
-const PATHS_FILE = 'paths.mat';
 const SOLUTION_FILE = './solution.mat';
 const MANUAL_FILE = 'solutions/bruteforce.mat';
 
@@ -20,7 +19,8 @@ function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, i
         let solver = new Solver(problems);
         solver.setSavingIntermediate(isSavingIntermediate);
         if(isImportingPaths) {
-            ProblemSolutionSynthesizer.pathsSolutionsFromFile(problems, PATHS_FILE, (solutions_dict) => {
+            console.log('is importing paths...');
+            ProblemSolutionSynthesizer.pathsSolutionsFromFile(problems, (solutions_dict) => {
                 solver = new Solver(problems, solutions_dict);
             });
         }
@@ -35,7 +35,7 @@ function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, i
         }
         if (isExportingPaths) {
             let solutions = solver.getSolutions();
-            ProblemSolutionSynthesizer.exportPaths(PATHS_FILE, solutions);
+            ProblemSolutionSynthesizer.exportPaths(solutions);
         }
         solver.exportToFile(SOLUTION_FILE);
     });
