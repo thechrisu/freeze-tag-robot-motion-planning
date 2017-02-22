@@ -16,16 +16,26 @@ const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
 const PATH_SMOOTHING = true;
-const MIN_COST_CUTOFF_FACTOR = 4;
+const MIN_COST_CUTOFF_FACTOR = 5;
 const CREATE_SAFE_POINTS = true;
-const SAFE_POINT_SEARCH_START_RADIUS = 3;
-const MINIMUM_SAFE_POINT_OPENNESS = 15;
+const SAFE_POINT_SEARCH_START_RADIUS = 1;
+const MINIMUM_SAFE_POINT_OPENNESS = 3;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 9;
-const STROKE_WIDTH = 0.5;
+const CELLS_PER_UNIT = 20;
+const STROKE_WIDTH = 1.2;
 const ALPHA_CUTOFF_FACTOR = 30;
 
 const working_configs = {
+    20: {
+        PATH_SMOOTHING: true,
+        MIN_COST_CUTOFF_FACTOR: 5,
+        CREATE_SAFE_POINTS: true,
+        SAFE_POINT_SEARCH_START_RADIUS: 1,
+        MINIMUM_SAFE_POINT_OPENNESS: 3,
+        CELLS_PER_UNIT: 16,
+        STROKE_WIDTH: 1.4,
+        ALPHA_CUTOFF_FACTOR: 30,
+    },
     21: {
         MIN_COST_CUTOFF_FACTOR: 4,
         CELLS_PER_UNIT: 6,
@@ -216,15 +226,20 @@ class PathGenerator {
     calculateScaledSafePoints(gridMatrix) {
         let robotCount = this.problem.robotLocations.length;
         this.scaledSafePoints = {};
+        let counter = 0;
         for (let i = 0; i < robotCount; i++) {
             let point = this.scalePointToProblem(this.problem.robotLocations[i]);
             this.scaledSafePoints[i] = CREATE_SAFE_POINTS ? SafePointHelper.createSafePointIfNeeded(
-                gridMatrix,
-                point,
-                SAFE_POINT_SEARCH_START_RADIUS,
-                MINIMUM_SAFE_POINT_OPENNESS
-            ) : null;
+                    gridMatrix,
+                    point,
+                    SAFE_POINT_SEARCH_START_RADIUS,
+                    MINIMUM_SAFE_POINT_OPENNESS
+                ) : null;
+            if (this.scaledSafePoints[i]) {
+                counter++;
+            }
         }
+        console.error('Generated ' + counter + ' safe points!');
     }
 
     calculateUsingThread(data) {
