@@ -55,11 +55,11 @@ class Solution(object):
         self.generate_distance_matrix()
         self.left = {}
         self.lock = threading.Lock()
-        self.robots_map = {}
+        # self.robots_map = {}
 
         for robot in self.robots:
             self.left[self.point_to_key(robot)] = None
-            self.robots_map[self.point_to_key(robot)] = None
+            # self.robots_map[self.point_to_key(robot)] = None
 
     def point_to_key(self, point):
         return list(point.coords)[0]
@@ -76,7 +76,7 @@ class Solution(object):
             self.distances[self.point_to_key(robot)].sort(key=lambda x: x[1], reverse=True)
 
     def list_of_points_to_path(self, points):
-        return (str(self.convert_points_to_tuples(points))[1:-1]).replace("'", "").replace("'", "")
+        return (str(self.convert_points_to_tuples(points))[1:-1]).replace("'", "")
 
     def to_string(self):
         # tuples = self.answer()
@@ -84,8 +84,9 @@ class Solution(object):
         path = ""
         #  self.paths = list(map(lambda x: rdp_top_level(x, self.obstacles, self.robots), self.paths))
         paths = list(map(self.list_of_points_to_path, self.paths))
-        path = ";".join(paths)
-        return (str(self.problem_number) + ':' + path).replace(" ", "")
+        path = "; ".join(paths)
+        # return (str(self.problem_number) + ':' + path).replace(" ", "")
+        return str(self.problem_number) + ': ' + path
 
     def remove_duplicates_and_append(self, path):
         unique_path = [path[0]]
@@ -104,15 +105,15 @@ class Solution(object):
 
     def convert_points_to_tuples(self, points):
         # return [(point.x/10000, point.y/10000) for point in points]
-        new_points = []
-        for point in points:
-            if self.point_to_key(point) in self.robots_map:
-                new_points.append(tuple(("{0:.16f}".format(point.x), "{0:.16f}".format(point.y))))
-            else:
-                new_points.append(tuple(("{0:.10f}".format(point.x), "{0:.10f}".format(point.y))))
-
-        return new_points
-        # return [("{0:.11f}".format(point.x), "{0:.11f}".format(point.y)) for point in points]
+        # new_points = []
+        # for point in points:
+        #     if self.point_to_key(point) in self.robots_map:
+        #         new_points.append(tuple(("{0:.16f}".format(point.x), "{0:.16f}".format(point.y))))
+        #     else:
+        #         new_points.append(tuple(("{0:.11f}".format(point.x), "{0:.11f}".format(point.y))))
+        #
+        # return new_points
+        return [("{0:.16f}".format(point.x), "{0:.16f}".format(point.y)) for point in points]
 
     def convert_tuples_to_points(self, points):
         return [Point(x, y) for x, y in points]
