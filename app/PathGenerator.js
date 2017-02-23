@@ -16,14 +16,14 @@ const CPUCount = require('os').cpus().length;
 const childProcess = require('child_process');
 
 const PATH_SMOOTHING = true;
-const MIN_COST_CUTOFF_FACTOR = 1.2;
+const MIN_COST_CUTOFF_FACTOR = 2.2;
 const CREATE_SAFE_POINTS = true;
 const SAFE_POINT_SEARCH_START_RADIUS = 1;
 const MINIMUM_SAFE_POINT_OPENNESS = 0.05;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 6;
-const STROKE_WIDTH = 0.7;
-const ALPHA_CUTOFF_FACTOR = 130;
+const CELLS_PER_UNIT = 34;
+const STROKE_WIDTH = 1;
+const ALPHA_CUTOFF_FACTOR = 5;
 
 const working_configs = {
     16: {
