@@ -1,10 +1,7 @@
 from shapely.geometry import Point, LinearRing, LineString
+from vis import VisibilityGraph
 import os
 import threading
-from rdp import rdp_top_level
-import shortestpath
-import cluster
-import vis
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -81,13 +78,16 @@ class Solution(object):
 
     def to_string(self):
         # tuples = self.answer()
-        self.answer()
-        path = ""
-        #  self.paths = list(map(lambda x: rdp_top_level(x, self.obstacles, self.robots), self.paths))
-        paths = list(map(self.list_of_points_to_path, self.paths))
-        path = "; ".join(paths)
-        # return (str(self.problem_number) + ':' + path).replace(" ", "")
-        return str(self.problem_number) + ': ' + path
+        # self.answer()
+
+        v = VisibilityGraph(self.robots, self.obstacles)
+
+        # path = ""
+        # paths = list(map(self.list_of_points_to_path, self.paths))
+        # path = "; ".join(paths)
+        # # return (str(self.problem_number) + ':' + path).replace(" ", "")
+        # return str(self.problem_number) + ': ' + path
+        return str(v.visible_graph)
 
     def remove_duplicates_and_append(self, path):
         unique_path = [path[0]]
@@ -101,8 +101,6 @@ class Solution(object):
             self.paths.append(unique_path)
 
     def answer(self):
-        v = vis.VisibilityGraph(self.robots, self.obstacles)
-        shortestpath.sPaths(v.visible_graph)
         del self.left[self.point_to_key(self.robots[0])]
         self.reach_closest_robot(self.robots[0], [self.robots[0]])
 
@@ -153,7 +151,7 @@ class Solution(object):
 
         t1.join()
         t2.join()
-        print(len(self.left))
+        # print(len(self.left))
         # self.reach_closest_robot(robot, [robot])
 
     def reach_robot(self, start, robot, current_path):
@@ -232,65 +230,10 @@ class Solution(object):
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
 
-        print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
+        # print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
         # return self.convert_tuples_to_points(intermediate_nodes)
-
-NUM_CLUSTERS = 4
-
-
-def find_closest_robot(bot, potential_goals):
-    closest, distance, path = None, 99999999999999999, []
-    for g_bot in shortestpath.shortestPaths[bot]:
-        if g_bot in potential_goals:
-            p = shortestpath.shortestPaths[bot][g_bot]
-            if closest is None or p[1] < distance:
-                closest = g_bot
-                distance = p[1]
-                path = p[0]
-    return {sleeper: closest, cost: distance, worker: bot, path: path}
-
-
-def getGreedyOptions(availableRobots, sleepingRobots):
-    unsorted_options = []
-    for a_bot in availableRobots:
-        for s_bot in sleepingRobots:
-            sh = shortestpath.shortestPaths[a_bot][s_bot]
-            unsorted_options.append({
-                cost: sh.c,
-                path: sh.p,
-                worker: a_bot,
-                sleeper: s_bot
-            })
-    # TODO: Get visibility paths for every bot in availableRobots, sleepingRobots
-    return sorted(unsorted_options, key=(lambda x: x.cost))
-
-
-def doComputationStep(availableRobots, sleepingRobots):
-    '''clusters = cluster.getKClusters(sleepingRobots, NUM_CLUSTERS)
-    best_by_cluster = {}
-    for cluster_num in clusters:
-        minDist = 999999
-        best_opt = None
-        for bot in availableRobots:
-            opt = find_closest_robot(bot, clusters[cluster_num])
-            if minDist < opt.cost:
-                best_opt = opt
-                minDist = opt.cost
-        best_by_cluster[cluster_num] = best_opt
-    bots = []
-    for opt in best_by_cluster:
-        bots.append(opt.worker)
-    remaining = set(availableRobots) - set(bots)
-    greedy_options = getGreedyOptions(remaining, sleepingRobots)'''
-    #  TODO: Move best by cluster
-    #  TODO: Get greedy option for remaining bots
-    return options
-
-
-def moveBots(options):
-    pass
 
 robots_file = open('robots.mat', 'r')
 for line in robots_file.readlines():
@@ -307,9 +250,7 @@ with open('solver.mat', 'a') as sol_file:
     sol_file.writelines(USER_NAME + '\n')
     sol_file.writelines(PASS + '\n')
     for p_ind in probs_to_solve:
-        if p_ind != 0:
-            continue
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
-        print(sol_str)
+        # print(sol_str)
         sol_file.writelines(sol_str + '\n')

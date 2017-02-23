@@ -1,6 +1,6 @@
 from shapely.geometry import Point, LinearRing, LineString
 from multiprocessing import Pool
-
+import threading
 
 class VisibilityGraph:
 
@@ -28,12 +28,8 @@ class VisibilityGraph:
 
         # append reachable pointsto visible_graph
         for point in self.points:
-            for reach in self.points:
-                if self.point_to_key(point) not in self.visible_graph:
-                    self.visible_graph[self.point_to_key(point)] = []
-                edge = self.is_valid_edge(point, reach)
-                if edge:
-                    self.visible_graph[self.point_to_key(point)].append(reach)
+            t = threading.Thread(target=self.add_nodes, args=(point,))
+            t.start()
 
     def is_valid_edge(self, p1, p2):
         p1 = self.point_to_key(p1)
@@ -44,6 +40,15 @@ class VisibilityGraph:
             if intersection and intersection.geom_type != "Point":
                 return None
         return edge
+
+    def add_nodes(self, point):
+        for reach in self.points:
+            if self.point_to_key(point) not in self.visible_graph:
+                self.visible_graph[self.point_to_key(point)] = []
+            edge = self.is_valid_edge(point, reach)
+            if edge:
+                self.visible_graph[self.point_to_key(point)].append(reach)
+        print("Node added")
 
     def point_to_key(self, point):
         return list(point.coords)[0]
