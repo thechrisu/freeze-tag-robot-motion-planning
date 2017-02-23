@@ -155,9 +155,14 @@ class Solution {
             let temp = [];
             let pathLength = path.length;
             for (let i = 0; i < pathLength; i++) {
-                let number = path[i];
-                if (i != 0 && i != pathLength - 1) number = parseFloat(number.toFixed(DECIMAL_POINTS));
-                temp.push(number);
+                let numbers = path[i];
+                if (i != 0 && i != pathLength - 1) {
+                    let newNumbers = [];
+                    newNumbers.push(parseFloat(numbers[0].toFixed(DECIMAL_POINTS)));
+                    newNumbers.push(parseFloat(numbers[1].toFixed(DECIMAL_POINTS)));
+                    numbers = newNumbers;
+                }
+                temp.push(numbers);
             }
             path = temp;
         }

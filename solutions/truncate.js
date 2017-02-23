@@ -2,11 +2,14 @@
  * Created by euql1n on 23/02/17.
  */
 
+"use strict";
+
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
 const FILE = path.join(__dirname, 'best.mat');
+const OUT  = path.join(__dirname, 'truncated.mat');
 
 let lineReader = readline.createInterface({
     input: fs.createReadStream(FILE),
@@ -15,9 +18,13 @@ let lineReader = readline.createInterface({
 let lines = [];
 
 lineReader.on('line', (line) => {
+    if(!line.match(/^\d+: /)) {
+        lines.push(line);
+        return;
+    }
     line = line.replace(/\s/gi, '');
     let parts = line.split(':');
-    let paths = parts[1].split(';';
+    let paths = parts[1].split(';');
     for (let i = 0; i < paths.length; i++) {
         let points = paths[i].replace(/(^\(|\)$)/gi, '').split('),(');
         let pathString = '(';
@@ -38,5 +45,5 @@ lineReader.on('line', (line) => {
     lines.push(parts[0] + ':' + paths.join(';'));
 });
 lineReader.on('close', () => {
-    fs.writeFile(FILE, lines.join('\n'));
+    fs.writeFile(OUT, lines.join('\n'));
 });
