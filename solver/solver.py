@@ -2,6 +2,7 @@ from shapely.geometry import Point, LinearRing, LineString
 import os
 import threading
 from rdp import rdp_top_level
+import shortestpath
 import cluster
 
 problems = []
@@ -236,12 +237,28 @@ NUM_CLUSTERS = 4
 
 
 def find_closest_robot(bot, potential_goals):
-    return None, -1
-    pass
+    closest, distance, path = None, 99999999999999999, []
+    for g_bot in shortestpath.shortestPaths[bot]:
+        if g_bot in potential_goals:
+            p = shortestpath.shortestPaths[bot][g_bot]
+            if closest is None or p.c < distance:
+                closest = g_bot
+                distance = p.c
+                path = p.p
+    return {sleeper: closest, cost: distance, worker: bot, path: path}
 
 
 def getGreedyOptions(availableRobots, sleepingRobots):
     unsorted_options = []
+    for a_bot in availableRobots:
+        for s_bot in sleepingRobots:
+            sh = shortestpath.shortestPaths[a_bot][s_bot]
+            unsorted_options.append({
+                cost: sh.c,
+                path: sh.p,
+                worker: a_bot,
+                sleeper: s_bot
+            })
     # TODO: Get visibility paths for every bot in availableRobots, sleepingRobots
     return sorted(unsorted_options, key=(lambda x: x.cost))
 
@@ -251,12 +268,18 @@ def doComputationStep(availableRobots, sleepingRobots):
     best_by_cluster = {}
     for cluster_num in clusters:
         minDist = 999999
-        best_bot = None
+        best_opt = None
         for bot in availableRobots:
-            closest, distance = find_closest_robot(bot, clusters[cluster_num])
-            if minDist < distance:
-                best_bot = closest
-        best_by_cluster[cluster_num] = best_bot
+            opt = find_closest_robot(bot, clusters[cluster_num])
+            if minDist < opt.cost:
+                best_opt = opt
+                minDist = opt.cost
+        best_by_cluster[cluster_num] = best_opt
+    bots = []
+    for opt in best_by_cluster:
+        bots.append(opt.worker)
+    remaining = set(availableRobots) - set(bots)
+    greedy_options = getGreedyOptions(remaining, sleepingRobots)
     #  TODO: Move best by cluster
     #  TODO: Get greedy option for remaining bots
     return options
