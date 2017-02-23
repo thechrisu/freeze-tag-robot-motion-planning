@@ -202,7 +202,6 @@ class PathGenerator {
             let searchDomain = this.searchDomains[startRobot];
             let searchDomainLength = searchDomain.length;
             console.log('Adding... ' + (startRobot) + ' of ' + robotCount + ', ' + searchDomainLength);
-            let leastBusyThread = this.getLeastBusyThread();
             for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
                 let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
@@ -228,7 +227,7 @@ class PathGenerator {
                     safeEnd: this.scaledSafePoints[endRobot],
                     gridMatrix,
                 };
-                leastBusyThread.send(dataObject);
+                this.calculateUsingThread(dataObject);
 
             }
         }
@@ -255,19 +254,27 @@ class PathGenerator {
         console.error('Generated ' + counter + ' safe points!');
     }
 
+    calculateUsingThread(data) {
+        let thread = this.getLeastBusyThread();
+        thread.send(data);
+    }
+
     getLeastBusyThread() {
-        let threadCount = this.threads.length;
-        let minLoad = Infinity;
-        let i;
-        let threadIndex = 0;
-        for (i = 0; i < threadCount; i++) {
-            if (this.threadLoad[i] < minLoad) {
-                minLoad = this.threadLoad[i];
-                threadIndex = i;
-            }
-        }
-        this.threadLoad[threadIndex] = this.threadLoad[threadIndex] + 1;
-        return this.threads[threadIndex];
+        if(!this.memoryThread) this.memoryThread = 0;
+        else this.memoryThread = (this.memoryThread + 1) % CPUCount;
+        return this.threads[this.memoryThread];
+        // let threadCount = this.threads.length;
+        // let minLoad = Infinity;
+        // let i;
+        // let threadIndex = 0;
+        // for (i = 0; i < threadCount; i++) {
+        //     if (this.threadLoad[i] < minLoad) {
+        //         minLoad = this.threadLoad[i];
+        //         threadIndex = i;
+        //     }
+        // }
+        // this.threadLoad[threadIndex] = this.threadLoad[threadIndex] + 1;
+        // return this.threads[threadIndex];
     }
 
     prepareThreads() {
