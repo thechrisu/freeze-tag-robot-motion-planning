@@ -12,7 +12,7 @@ const ProblemSolutionSynthesizer = require('./app/ProblemSolutionSynthesizer');
 
 const PROBLEM_FILE = './robots.mat';
 const SOLUTION_FILE = './solution.mat';
-const MANUAL_FILE = 'solutions/bruteforce.mat';
+const MANUAL_FILE = 'solver/solver.mat';
 
 function solveWrapper(isVisualizing, selected, isSolvingAll, isImportingPaths, isExportingPaths, isSavingIntermediate) {
     ProblemSet.importFromFile(PROBLEM_FILE, (problems) => {

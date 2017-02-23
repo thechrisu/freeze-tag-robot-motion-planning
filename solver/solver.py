@@ -145,7 +145,7 @@ class Solution(object):
 
         t1.join()
         t2.join()
-        print(len(self.left))
+        #print(len(self.left))
         # self.reach_closest_robot(robot, [robot])
 
     def reach_robot(self, start, robot, current_path):
@@ -200,6 +200,14 @@ class Solution(object):
         return distance
 
     def find_points_from_obstacle(self, entry, exit, obstacle):
+        print(obstacle.coords)
+        min_hull = obstacle.convex_hull
+        for obs in self.obstacles:
+            if obs == obstacle:
+                continue
+            min_hull = ch.difference(obs)
+        print(min_hull)
+        obstacle = min_hull
         coords = list(obstacle.coords)
         coords.append(coords[0])
         result = []
@@ -224,10 +232,37 @@ class Solution(object):
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
 
-        print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
-
-        return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
+        #print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
+        #return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
+        return self.optimise_intermediate_nodes([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit], obstacle)
         # return self.convert_tuples_to_points(intermediate_nodes)
+
+    def optimise_intermediate_nodes(self, path_around_obstacle, obstacle):
+        '''obstacle_coords = list(obstacle.coords)
+
+
+        for path_coord in path_around_obstacle:
+
+
+            temp_obstacle = LinearRing([item for item in obstacle_coords if item != path_coord])
+            if path_coord.within(temp_obstacle) and path_coord != obstacle_coords[0]:
+                is_redundant_point = True
+                other_obstacles = [item for item in self.obstacles if item != obstacle]
+                for obs in self.obstacles:
+                    if obs == obstacle:
+                        continue
+                    if len(list((obs.intersection(temp_obstacle)).geoms)) > 0:
+                        print(len(list((obs.intersection(temp_obstacle)).geoms)))
+                        is_redundant_point = False
+                        break
+                if is_redundant_point:
+                    print "REDUNDANT POINT!!!"
+                    path_around_obstacle.remove(path_coord)
+                    if path_coord in obstacle_coords:
+                        obstacle_coords.remove(path_coord)'''
+        return path_around_obstacle
+
+
 
 robots_file = open('robots.mat', 'r')
 for line in robots_file.readlines():
@@ -246,5 +281,6 @@ with open('solver.mat', 'a') as sol_file:
     for p_ind in probs_to_solve:
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
-        print(sol_str)
+        #print(sol_str)
+        print("Done solution", p_ind)
         sol_file.writelines(sol_str + '\n')
