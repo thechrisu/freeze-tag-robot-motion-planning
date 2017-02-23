@@ -6,6 +6,9 @@
 
 "use strict";
 
+const REDUCE_PRECISION = true;
+const DECIMAL_POINTS = 8;
+
 const deasync = require('deasync');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
 const PathGenerator = require('./PathGenerator').PathGenerator;
@@ -21,7 +24,7 @@ class Solution {
      */
     constructor(problem, robotPaths, paths) {
         this.problem = problem;
-        if(!robotPaths) {
+        if (!robotPaths) {
             /**
              * @type {Array.<Point[]>}
              */
@@ -29,7 +32,7 @@ class Solution {
         } else {
             this.robotPaths = robotPaths;
         }
-        this.paths = paths
+        this.paths = paths;
     }
 
     /**
@@ -51,12 +54,12 @@ class Solution {
         console.time('> problem-' + this.problem.problemNumber + '-paths');
         this.complete = false;
         let generator = new PathGenerator(this.problem);
-        if(!this.paths) {
+        if (!this.paths) {
             generator.calculatePaths(this.computeOptimalPropagation.bind(this));
         } else {
             this.computeOptimalPropagation(this.paths);
         }
-        while(!this.complete) {
+        while (!this.complete) {
             deasync.runLoopOnce();
         }
     }
@@ -90,7 +93,7 @@ class Solution {
 
     logPath(path) {
         console.log('Path:');
-        for(let i = 0; i < path.length; i++) {
+        for (let i = 0; i < path.length; i++) {
             console.log(path[i].x.toFixed(2), path[i].y.toFixed(2))
         }
     }
@@ -107,7 +110,7 @@ class Solution {
             let location = this.currentLocations[awakeRobot];
             for (let k = 0; k < sleepingRobotCount; k++) {
                 let sleepingRobot = this.sleepingRobots[k];
-                if(this.paths[location] && this.paths[location][sleepingRobot]) {
+                if (this.paths[location] && this.paths[location][sleepingRobot]) {
                     options.push({
                         points: this.paths[location][sleepingRobot].points,
                         cost: this.paths[location][sleepingRobot].cost,
@@ -124,7 +127,7 @@ class Solution {
         let busyRobots = [];
         let optionCount = options.length;
 
-        if(optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
+        if (optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
             console.error('No solution! Dumping results as-is.');
             console.error('Sleeping robots: ' + this.sleepingRobots.length + ', awake robots: ' + this.awakeRobotCount
                 + ', total: ' + this.problem.robotLocations.length);
@@ -147,10 +150,22 @@ class Solution {
     }
 
     appendPath(robot, path) {
+
+        if (REDUCE_PRECISION) {
+            let temp = [];
+            let pathLength = path.length;
+            for (let i = 0; i < pathLength; i++) {
+                let number = path[i];
+                if (i != 0 && i != pathLength - 1) number = parseFloat(number.toFixed(DECIMAL_POINTS));
+                temp.push(number);
+            }
+            path = temp;
+        }
+
         if (this.currentPaths[robot] === undefined) this.currentPaths[robot] = [];
         if (this.currentPaths[robot].length > 0) {
             let lastPoint = this.currentPaths[robot][this.currentPaths[robot].length - 1];
-            if(lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
+            if (lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
                 this.currentPaths[robot] = this.currentPaths[robot].concat(path.slice(1));
                 return;
             }
