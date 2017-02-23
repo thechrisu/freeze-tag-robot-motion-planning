@@ -6,8 +6,12 @@
 
 "use strict";
 
+const REDUCE_PRECISION = true;
+const DECIMAL_POINTS = 8;
+
 const deasync = require('deasync');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
+const Point = require('./CoordinateHelper').Point;
 const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
 const TimSort = require('timsort');
@@ -25,7 +29,7 @@ class Solution {
      */
     constructor(problem, robotPaths, paths) {
         this.problem = problem;
-        if (!robotPaths) {
+        if(!robotPaths) {
             /**
              * @type {Array.<Point[]>}
              */
@@ -33,7 +37,7 @@ class Solution {
         } else {
             this.robotPaths = robotPaths;
         }
-        this.paths = paths
+        this.paths = paths;
     }
 
     /**
@@ -66,7 +70,19 @@ class Solution {
     }
 
     computeOptimalPropagation(paths) {
-        let robotCount = this.setupPropagation(paths);
+        console.log('> Found available paths for #' + this.problem.problemNumber + '!');
+        this.paths = paths;
+        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
+        this.awakeRobots = [0];
+        this.sleepingRobots = [];
+        let robotCount = this.problem.robotLocations.length;
+        for (let i = 1; i < robotCount; i++) {
+            this.sleepingRobots.push(i);
+        }
+        this.currentLocations = {0: 0};
+        this.currentPaths = {0: []};
+        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
+        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
         this.awakeRobotCount = 1;
         while (this.awakeRobotCount < robotCount) {
             if (this.calculateRobotPaths() === false) break;
@@ -80,23 +96,6 @@ class Solution {
         this.complete = true;
     }
 
-    setupPropagation(paths) {
-        console.log('> Found available paths for #' + this.problem.problemNumber + '!');
-        this.paths = paths;
-        console.timeEnd('> problem-' + this.problem.problemNumber + '-paths');
-        this.awakeRobots = [0];
-        this.sleepingRobots = [];
-        this.robotCount = this.problem.robotLocations.length;
-        for (let i = 1; i < this.robotCount; i++) {
-            this.sleepingRobots.push(i);
-        }
-        this.currentLocations = {0: 0};
-        this.currentPaths = {0: []};
-        console.log('> Calculating robot paths for #' + this.problem.problemNumber + '...');
-        console.time('> problem-' + this.problem.problemNumber + '-robot-paths');
-        return this.robotCount;
-    }
-
     logPath(path) {
         console.log('Path:');
         for (let i = 0; i < path.length; i++) {
@@ -105,61 +104,17 @@ class Solution {
     }
 
     calculateRobotPaths() {
-        console.log('==> asleep: ' + this.sleepingRobots.length + ', woken up: '
-            + this.awakeRobotCount + ', total: ' + this.robotCount);
         let sleepingRobotCount = this.sleepingRobots.length;
         if (sleepingRobotCount === 0) return;
+        let awakeRobotCount = this.awakeRobots.length;
 
-        let optionsWeActuallyUse = [];
-        let allOptions = this.getGreedyOptions(this.awakeRobots, this.sleepingRobots);
-        if (ENABLE_CLUSTERING && (this.awakeRobotCount < Math.sqrt(Math.sqrt(this.robotCount)) || this.robotCount < 30)) {
-            let optionsForEnteringNewClusters = this.getClusterOptions();
-            optionsWeActuallyUse = optionsForEnteringNewClusters.concat(allOptions);
-        } else {
-            optionsWeActuallyUse = allOptions;
-        }
-
-        if (allOptions.length === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
-            console.error('No solution! Dumping results as-is.');
-            console.error('Sleeping robots: ' + this.sleepingRobots.length + ', awake robots: ' + this.awakeRobotCount
-                + ', total: ' + this.problem.robotLocations.length);
-            return false;
-            //process.exit(1);
-        }
-
-        this.moveBots(optionsWeActuallyUse);
-    }
-
-    getClusterOptions() {
-        let clusterSet = new ClusterSet();
-        clusterSet.createClusters(this.sleepingRobots, this.paths);
-        let botsEnteringNewClusters = {};
-        let numBotsEnteringNewClusters = 0;
-        let optionsForEnteringNewClusters = [];
-        for (let i = 0; i < clusterSet.clusters.length && numBotsEnteringNewClusters < MAX_NEW_CLUSTERS_PER_STEP; i++) {
-            let unenteredCluster = clusterSet.clusters[i];
-            let optionsForCluster = this.getGreedyOptions(this.awakeRobots, unenteredCluster.getRobots()); //TODO: Optimize with k smallest options
-            for (let j = 0; j < optionsForCluster.length; j++) {
-                let opt = optionsForCluster[j];
-                let bot = opt.worker;
-                if (botsEnteringNewClusters[bot] === undefined) {
-                    botsEnteringNewClusters[bot] = true;
-                    numBotsEnteringNewClusters++;
-                    optionsForEnteringNewClusters.push(opt);
-                    break;
-                }
-            }
-        }
-        return optionsForEnteringNewClusters;
-    }
-
-    getGreedyOptions(awakeRobots, sleepingRobots) {
         let options = [];
-        for (let i = 0; i < awakeRobots.length; i++) {
-            let awakeRobot = awakeRobots[i];
+
+        for (let i = 0; i < awakeRobotCount; i++) {
+            let awakeRobot = this.awakeRobots[i];
             let location = this.currentLocations[awakeRobot];
-            for (let k = 0; k < sleepingRobots.length; k++) {
-                let sleepingRobot = sleepingRobots[k];
+            for (let k = 0; k < sleepingRobotCount; k++) {
+                let sleepingRobot = this.sleepingRobots[k];
                 if (this.paths[location] && this.paths[location][sleepingRobot]) {
                     options.push({
                         points: this.paths[location][sleepingRobot].points,
@@ -172,13 +127,18 @@ class Solution {
         }
 
         TimSort.sort(options, (o1, o2) => o1.cost - o2.cost);
-        return options;
-    }
 
-    moveBots(options) {
         let awokenRobots = [];
         let busyRobots = [];
         let optionCount = options.length;
+
+        if (optionCount === 0 && this.awakeRobotCount < this.problem.robotLocations.length) {
+            console.error('No solution! Dumping results as-is.');
+            console.error('Sleeping robots: ' + this.sleepingRobots.length + ', awake robots: ' + this.awakeRobotCount
+                + ', total: ' + this.problem.robotLocations.length);
+            return false;
+            //process.exit(1);
+        }
 
         for (let i = 0; i < optionCount; i++) {
             let option = options[i];
@@ -195,10 +155,27 @@ class Solution {
     }
 
     appendPath(robot, path) {
+
+        if (REDUCE_PRECISION) {
+            let temp = [];
+            let pathLength = path.length;
+            for (let i = 0; i < pathLength; i++) {
+                let point = path[i];
+                if (i != 0 && i != pathLength - 1) {
+                    point = new Point(
+                        parseFloat(point.x.toFixed(DECIMAL_POINTS)),
+                        parseFloat(point.y.toFixed(DECIMAL_POINTS))
+                    );
+                }
+                temp.push(point);
+            }
+            path = temp;
+        }
+
         if (this.currentPaths[robot] === undefined) this.currentPaths[robot] = [];
         if (this.currentPaths[robot].length > 0) {
             let lastPoint = this.currentPaths[robot][this.currentPaths[robot].length - 1];
-            if (lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
+            if(lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
                 this.currentPaths[robot] = this.currentPaths[robot].concat(path.slice(1));
                 return;
             }

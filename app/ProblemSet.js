@@ -41,7 +41,7 @@ class ProblemSet {
      */
     static importFromFile(problemSetPath, callback) {
         var lineReader = readline.createInterface({
-            input: fs.createReadStream(path.join(process.cwd(), problemSetPath)),
+            input: fs.createReadStream(path.join(__dirname, '..', problemSetPath)),
         });
 
         var problemSets = [];
