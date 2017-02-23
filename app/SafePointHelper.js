@@ -21,6 +21,8 @@ class SafePointHelper {
     static createSafePointIfNeeded(gridMatrix, gridMatrixNoStroke, point, radius, minimumOpenness) {
         let x = Math.round(point.x);
         let y = Math.round(point.y);
+        if(gridMatrix == null) return null;
+        if(gridMatrix[y]== null) return null;
         if (gridMatrix[y][x] === 1) {
             let safePoint = null;
             let previousLayer = null;
@@ -35,7 +37,7 @@ class SafePointHelper {
                 let initialOpenness = SafePointHelper.initialiseArray(arraySize, 0);
                 SafePointHelper.calculateOpenness(x, y, radius, gridMatrix, initialOpenness, points);
                 let initialOpennessNoStroke = SafePointHelper.initialiseArray(arraySize, 0);
-                SafePointHelper.calculateOpenness(x, y, radius, gridMatrix, initialOpennessNoStroke, points);
+                SafePointHelper.calculateOpenness(x, y, radius, gridMatrixNoStroke, initialOpennessNoStroke, points);
 
                 radius++;
                 //if (openCount === 0) continue;
