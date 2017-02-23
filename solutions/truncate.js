@@ -91,8 +91,8 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
                 let x = parseFloat(numbers[0]);
                 let y = parseFloat(numbers[1]);
                 if (!isRobot(problemNumber, x, y) && parseQuestion) {
-                    x = parseFloat(x.toFixed(14));
-                    y = parseFloat(y.toFixed(14));
+                    x = parseFloat(x.toFixed(12));
+                    y = parseFloat(y.toFixed(12));
                 }
                 pathString += x + ',' + y;
             }
