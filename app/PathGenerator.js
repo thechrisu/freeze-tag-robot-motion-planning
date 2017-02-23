@@ -51,7 +51,7 @@ const working_configs = {
         CELLS_PER_UNIT: 6,
         STROKE_WIDTH: 0.3,
     },
-    22: {
+    '22, 23, 24': {
         PATH_SMOOTHING: true,
         MIN_COST_CUTOFF_FACTOR: 2.2,
         CREATE_SAFE_POINTS: true,
