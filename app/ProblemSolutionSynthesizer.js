@@ -152,6 +152,7 @@ class ProblemSolutionSynthesizer {
     static exportPaths(solutions) {
         console.log('exporting paths');
         for (let i = 0; i < solutions.length; i++) {
+            console.log('exporting: ' + solutions[i].problem.problemNumber);
             fs.writeFileSync('path' + solutions[i].problem.problemNumber + '.json', ProblemSolutionSynthesizer.getPathsJSON(solutions[i]));
         }
     }

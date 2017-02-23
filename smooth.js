@@ -43,14 +43,25 @@ processLine(solutionLines, line) {
     currentProblemNumber++;
 }*/
 
-function pathToArray(path) {
+/**
+ * @deprecated
+ * @param path
+ * @returns {Array}
+ */
+function pathToArray(path, pg) {
     let ret = [];
     for(let i = 0; i < path.length; i++) {
-        ret.push([path[i].x, path[i].y]);
+        let scp = pg.scalePointToProblem(path[i]);
+        ret.push([Math.round(scp.x), Math.round(scp.y)]);
     }
     return ret;
 }
 
+/**
+ * @deprecated
+ * @param pointArray
+ * @returns {Array}
+ */
 function arrayToPath(pointArray) {
     let ret = [];
     for(let i = 0; i < pointArray.length; i++) {
@@ -63,17 +74,18 @@ ProblemSolutionSynthesizer.hollowSolutionsFromFilePaths(PROBLEM_FILE, SOLUTION_F
 	//more code here
 	for(let i = 0; i < solutions.length; i++){ 
 		let solution = solutions[i];
-		let matrix = (new PathGenerator(solution.problem)).generateGridMatrix(solution.problem.obstacles);
+        let pg = new PathGenerator(solution.problem);
+		let matrix = pg.generateGridMatrix(solution.problem.obstacles);
         let grid = new PF.Grid(matrix);
         for(let j = 0; j < solution.robotPaths.length; j++) {
-        	let path = pathToArray(solution.robotPaths[j]);
+        	let path = pathToArray(solution.robotPaths[j], pg);
             let pathLength = path.length;
             if(path.length > 0) {
                 path = PF.Util.compressPath(path);
                 console.log('compressed!');
             	path = PF.Util.smoothenPath(grid, path);
                 console.log('smoothened!');
-                solution.robotPaths[j] = arrayToPath(path);
+                solution.robotPaths[j] = pg.convertPathToOriginalScalePoints(path);
             }
             console.log('done ' + (j+1) + ' of ' + solution.robotPaths.length
                 + ' paths. Reduced from ' + pathLength + ' to ' + path.length);

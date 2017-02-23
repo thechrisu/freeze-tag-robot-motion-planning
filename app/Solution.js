@@ -15,6 +15,10 @@ const Point = require('./CoordinateHelper').Point;
 const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
 const TimSort = require('timsort');
+const ClusterSet = require('./Cluster').ClusterSet;
+
+const ENABLE_CLUSTERING = false;
+const MAX_NEW_CLUSTERS_PER_STEP = 5; //More new clusters get explored if increased
 
 class Solution {
 
@@ -25,7 +29,7 @@ class Solution {
      */
     constructor(problem, robotPaths, paths) {
         this.problem = problem;
-        if (!robotPaths) {
+        if(!robotPaths) {
             /**
              * @type {Array.<Point[]>}
              */
@@ -171,7 +175,7 @@ class Solution {
         if (this.currentPaths[robot] === undefined) this.currentPaths[robot] = [];
         if (this.currentPaths[robot].length > 0) {
             let lastPoint = this.currentPaths[robot][this.currentPaths[robot].length - 1];
-            if (lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
+            if(lastPoint.x === path[0].x && lastPoint.y === path[0].y) {
                 this.currentPaths[robot] = this.currentPaths[robot].concat(path.slice(1));
                 return;
             }

@@ -130,6 +130,7 @@ class Visualizer {
             }
         }
         var x_diff = raw_max_x - raw_min_x;
+        console.log(x_diff);
         let ret = {
             x_offset: raw_min_x,
             y_offset: raw_min_y,
@@ -194,7 +195,42 @@ class Visualizer {
         }
     }
 
+    static drawCells(cellSize, ctx, scale) {
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = Visualizer.getValidColour();
+        //along x
+        let big_end_x = MAX_DRAWING_SIZE * scale.x_scale - 0.5 * scale.post_offset;
+        let big_end_y = MAX_DRAWING_SIZE * scale.y_scale - 0.5 * scale.post_offset;
+
+        let real_cellsize = cellSize * scale.factor;
+        for (let i = scale.post_offset; i <= big_end_x; i += real_cellsize) {
+            //let ha = ((point.x - scale.x_offset) * scale.factor) + scale.post_offset;
+            let sp_start = {x: i, y: scale.post_offset};
+            let sp_end = {x: i, y: big_end_y};
+            console.log(i);
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(sp_start.x, sp_start.y);
+            ctx.lineTo(sp_end.x, sp_end.y);
+            ctx.stroke();
+        }
+        //along y
+        for (let i = scale.post_offset; i < big_end_y; i += real_cellsize) {
+            //let ha = ((point.x - scale.x_offset) * scale.factor) + scale.post_offset;
+            let sp_start = {x: scale.post_offset, y: i};
+            let sp_end = {x: big_end_x, y: i};
+            console.log(i);
+            ctx.strokeStyle = 'black';
+            ctx.beginPath();
+            ctx.moveTo(sp_start.x, sp_start.y);
+            ctx.lineTo(sp_end.x, sp_end.y);
+            ctx.stroke();
+        }
+
+    }
+
     static drawRobotLocations(points, ctx, scale, isAwake) {
+        ctx.globalAlpha = 1.0;
         if(isAwake) {
             ctx.fillStyle = 'black';
         } else {
@@ -226,6 +262,7 @@ class Visualizer {
         var buffer = MAX_DRAWING_SIZE - REAL_DRAWING_SIZE;
         var x_size = buffer + REAL_DRAWING_SIZE * scale.x_scale;
         var y_size = buffer + REAL_DRAWING_SIZE * scale.y_scale;
+        console.log(x_size, y_size);
         var canvas = new Canvas(x_size, y_size);
         var ctx = canvas.getContext('2d');
         ctx.beginPath();
@@ -253,6 +290,7 @@ class Visualizer {
                 asleepRobots.push(bot);
             }
         }
+        console.log(asleepRobots);
         return asleepRobots;
     }
 
@@ -275,6 +313,7 @@ class Visualizer {
             }
             black_robots_to_draw = black_robots_locations;
         }
+        Visualizer.drawCells(5, ctx, scale);
         Visualizer.drawRobotLocations(black_robots_to_draw, ctx, scale, true);
         let asleepRobots = Visualizer.getAsleepRobots(solutionObj.problem.robotLocations, solutionObj.awakeRobots);
         if(asleepRobots.length > 0) {
