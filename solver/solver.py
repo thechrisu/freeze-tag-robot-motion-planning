@@ -4,6 +4,7 @@ import threading
 from rdp import rdp_top_level
 import shortestpath
 import cluster
+import vis
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -100,6 +101,8 @@ class Solution(object):
             self.paths.append(unique_path)
 
     def answer(self):
+        v = vis.VisibilityGraph(self.robots, self.obstacles)
+        shortestpath.sPaths(v.visible_graph)
         del self.left[self.point_to_key(self.robots[0])]
         self.reach_closest_robot(self.robots[0], [self.robots[0]])
 
@@ -242,10 +245,10 @@ def find_closest_robot(bot, potential_goals):
     for g_bot in shortestpath.shortestPaths[bot]:
         if g_bot in potential_goals:
             p = shortestpath.shortestPaths[bot][g_bot]
-            if closest is None or p.c < distance:
+            if closest is None or p[1] < distance:
                 closest = g_bot
-                distance = p.c
-                path = p.p
+                distance = p[1]
+                path = p[0]
     return {sleeper: closest, cost: distance, worker: bot, path: path}
 
 
@@ -265,7 +268,7 @@ def getGreedyOptions(availableRobots, sleepingRobots):
 
 
 def doComputationStep(availableRobots, sleepingRobots):
-    clusters = cluster.getKClusters(sleepingRobots, NUM_CLUSTERS)
+    '''clusters = cluster.getKClusters(sleepingRobots, NUM_CLUSTERS)
     best_by_cluster = {}
     for cluster_num in clusters:
         minDist = 999999
@@ -280,7 +283,7 @@ def doComputationStep(availableRobots, sleepingRobots):
     for opt in best_by_cluster:
         bots.append(opt.worker)
     remaining = set(availableRobots) - set(bots)
-    greedy_options = getGreedyOptions(remaining, sleepingRobots)
+    greedy_options = getGreedyOptions(remaining, sleepingRobots)'''
     #  TODO: Move best by cluster
     #  TODO: Get greedy option for remaining bots
     return options

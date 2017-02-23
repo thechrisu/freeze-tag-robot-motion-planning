@@ -4,8 +4,20 @@
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/117228
 from priodict import priorityDictionary
 import threading
+import math
 
 shortestPaths = {}
+
+
+def dist(p1, p2):
+    if not isinstance(p1, type((1.1, 2.1))):
+        p1 = (p1.x, p1.y)
+    if not isinstance(p2, type((1.1, 2.1))):
+        p2 = (p2.x, p2.y)
+    x_diff = p1[0] - p2[0]
+    y_diff = p1[1] - p2[1]
+    return math.sqrt(x_diff**2 + y_diff**2)
+
 
 def Dijkstra(G, start, end=None):
     """
@@ -58,14 +70,17 @@ def Dijkstra(G, start, end=None):
         if not end is None and v == end: break
 
         for w in G[v]:
-            vwLength = d_from_src[v] + G[v][w]
-            if w in d_from_src:
-                if vwLength < d_from_src[w]:
+            vwLength = d_from_src[v] + dist(v, w)
+            w_real = w
+            if not isinstance(w, type((1.1,1.2))):
+                w_real = (w.x, w.y)
+            if w_real in d_from_src:
+                if vwLength < d_from_src[w_real]:
                     raise ValueError, \
                         "Dijkstra: found better path to already-final vertex"
-            elif w not in Q or vwLength < Q[w]:
-                Q[w] = vwLength
-                predecessors[w] = v
+            elif w_real not in Q or vwLength < Q[w_real]:
+                Q[w_real] = vwLength
+                predecessors[w_real] = v
 
     return (d_from_src, predecessors)
 
@@ -78,17 +93,24 @@ def shortestPath(G, start, end=None):
     The output is a list of the vertices in order along
     the shortest path.
     """
-
+    #print('computing shortest path for ' + start)
     D, P = Dijkstra(G, start, end)
+    if not start in shortestPaths:
+        shortestPaths[start] = {}
     if end is None:
-        for orig_end in len(G):
+        for orig_end in G:
             path = []
-            while 1:
-                path.append(end)
-                if end == start: break
-                end = P[end]
-            path.reverse()
-            shortestPaths[start][orig_end] = {p: path, c: D[orig_end]}
+            end = orig_end
+            if start == orig_end:
+                shortestPaths[start][orig_end] = ([], 0.0)
+            else:
+                while 1:
+                    path.append(end)
+                    if end == start:
+                        break
+                    end = P[end]
+                path.reverse()
+                shortestPaths[start][orig_end] = (path, D[orig_end])
     else:
         path = []
         orig_end = end
@@ -96,9 +118,9 @@ def shortestPath(G, start, end=None):
             path.append(end)
             if end == start: break
             end = P[end]
-        shortestPaths[orig_end][start] = {p: path, c: D[orig_end]}
+        shortestPaths[orig_end][start] = (path, D[orig_end])
         path.reverse()
-        shortestPaths[start][orig_end] = {p: path, c: D[orig_end]}
+        shortestPaths[start][orig_end] = (path, D[orig_end])
 
 computed = {}
 
@@ -109,11 +131,15 @@ def doWork(G, start):
 
 
 def sPaths(G):
+    print('spaths called')
     threads = []
     for start in G:
-        if not start in G:
-            w = threading.Thread(target=doWork, args=(G, start))
-            w.start()
-            threads.append(w)
+        print('----------')
+        print(G[start])
+        if not start in computed:
+            t = threading.Thread(target=doWork, args=(G, start))
+            t.start()
+            threads.append(t)
     for t in threads:
         t.join()
+    print(shortestPaths)
