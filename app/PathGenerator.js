@@ -17,7 +17,7 @@ const childProcess = require('child_process');
 
 const PATH_SMOOTHING = true;
 const MIN_COST_CUTOFF_FACTOR = 4;
-const CREATE_SAFE_POINTS = true;
+const CREATE_SAFE_POINTS = false;
 const SAFE_POINT_SEARCH_START_RADIUS = 3;
 const MINIMUM_SAFE_POINT_OPENNESS = 15;
 const THREAD_FILE = 'PathGeneratorThread.js';
