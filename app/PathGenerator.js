@@ -202,6 +202,7 @@ class PathGenerator {
             let searchDomain = this.searchDomains[startRobot];
             let searchDomainLength = searchDomain.length;
             console.log('Adding... ' + (startRobot) + ' of ' + robotCount + ', ' + searchDomainLength);
+            let leastBusyThread = this.getLeastBusyThread();
             for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
                 let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
@@ -227,7 +228,7 @@ class PathGenerator {
                     safeEnd: this.scaledSafePoints[endRobot],
                     gridMatrix,
                 };
-                this.calculateUsingThread(dataObject);
+                leastBusyThread.send(dataObject);
 
             }
         }
@@ -252,11 +253,6 @@ class PathGenerator {
             }
         }
         console.error('Generated ' + counter + ' safe points!');
-    }
-
-    calculateUsingThread(data) {
-        let thread = this.getLeastBusyThread();
-        thread.send(data);
     }
 
     getLeastBusyThread() {
