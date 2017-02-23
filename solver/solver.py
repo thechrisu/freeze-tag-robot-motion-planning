@@ -1,10 +1,10 @@
 from shapely.geometry import Point, LinearRing, LineString
-from vis import VisibilityGraph
+#  from vis import VisibilityGraph
 import os
 import threading
 
 problems = []
-probs_to_solve = list(range(0, 30))
+probs_to_solve = [24] #[12] + list(range(22, 30))
 
 USER_NAME = 'inugami'
 PASS = 'pfsorqi9qp0cq1971l3la66vdl'
@@ -63,31 +63,63 @@ class Solution(object):
         return list(point.coords)[0]
 
     def generate_distance_matrix(self):
+        i = 0
         for robot in self.robots:
+            print('generating distance matrix for robot ' + str(i+1) + ' of ' + str(len(self.robots)))
+            i += 1
             self.distances[self.point_to_key(robot)] = []
             for reach in self.robots:
                 if robot is reach:
                     pass
                 else:
-                    self.distances[self.point_to_key(robot)].append(
-                        tuple((reach, robot.distance(reach))))
+                    cost = robot.distance(reach)
+                    if len(self.obstacles) > 0:
+                        cost =  cost * self.num_intersections_between_points(robot, reach)
+                    self.distances[self.point_to_key(robot)].append(tuple((reach, cost)))
             self.distances[self.point_to_key(robot)].sort(key=lambda x: x[1], reverse=True)
+        print('==> done generating distance matrix')
+
+    def num_intersections_between_points(self, robot, reach):
+        p = LineString([(robot.x, robot.y), (reach.x, reach.y)])
+        closest_intersection = None
+        intersect_end = None
+        num_intersections = 0
+        for obstacle in self.obstacles:
+            intersection = p.intersection(obstacle)
+            if intersection and intersection.geom_type == "MultiPoint":
+                # using 1 and -1 as maybe more than two intersection points
+                temp = list(intersection)
+                num_intersections += 1
+                intersect_start = temp[0]
+                intersect_end = temp[-1]
+                if robot.distance(intersect_start) > robot.distance(intersect_end):
+                    intersect_start, intersect_end = intersect_end, intersect_start
+                if closest_intersection:
+                    if robot.distance(intersect_start) < robot.distance(closest_intersection[0]):
+                        closest_intersection = (intersect_start, intersect_end, obstacle)
+                else:
+                    closest_intersection = (intersect_start, intersect_end, obstacle)
+        if not closest_intersection:
+            return 0
+        else:
+            return self.num_intersections_between_points(intersect_end, reach) + num_intersections
+
 
     def list_of_points_to_path(self, points):
         return (str(self.convert_points_to_tuples(points))[1:-1]).replace("'", "")
 
     def to_string(self):
         # tuples = self.answer()
-        # self.answer()
+        self.answer()
 
-        v = VisibilityGraph(self.robots, self.obstacles)
+        #  v = VisibilityGraph(self.robots, self.obstacles)
 
-        # path = ""
-        # paths = list(map(self.list_of_points_to_path, self.paths))
-        # path = "; ".join(paths)
-        # # return (str(self.problem_number) + ':' + path).replace(" ", "")
-        # return str(self.problem_number) + ': ' + path
-        return str(v.visible_graph)
+        path = ""
+        paths = list(map(self.list_of_points_to_path, self.paths))
+        path = "; ".join(paths)
+        return (str(self.problem_number) + ':' + path).replace(" ", "")
+        #  return str(self.problem_number) + ': ' + path
+        # return str(v.visible_graph)
 
     def remove_duplicates_and_append(self, path):
         unique_path = [path[0]]
@@ -102,7 +134,8 @@ class Solution(object):
 
     def answer(self):
         del self.left[self.point_to_key(self.robots[0])]
-        self.reach_closest_robot(self.robots[0], [self.robots[0]])
+        startBot = self.robots[0]
+        self.reach_closest_robot(startBot, [startBot])
 
     def convert_points_to_tuples(self, points):
         # return [(point.x/10000, point.y/10000) for point in points]
@@ -133,34 +166,24 @@ class Solution(object):
 
     def reach_closest_robot(self, start, current_path):
         robot = self.find_closest_robot(start)
+        #  print(start, robot, current_path)
         if not robot:
             if len(current_path) > 1:
-                self.paths.append(current_path)
-                # self.remove_duplicates_and_append(current_path)
+                #  self.paths.append(current_path)
+                self.remove_duplicates_and_append(current_path)
             return
-
         while start:
             start = self.reach_robot(start, robot, current_path)
-
-        # fixed to avoid redundant points
-        t1 = threading.Thread(target=self.reach_closest_robot, args=(robot, current_path))
-        t2 = threading.Thread(target=self.reach_closest_robot, args=(robot, [robot]))
-
-        t1.start()
-        t2.start()
-
-        t1.join()
-        t2.join()
+        current_path.append(robot)
         # print(len(self.left))
-        # self.reach_closest_robot(robot, [robot])
+        self.reach_closest_robot(robot, current_path)
 
     def reach_robot(self, start, robot, current_path):
+        if start == robot:
+            return None
         p = LineString([(start.x, start.y), (robot.x, robot.y)])
         closest_intersection = None
         # print("REACH ROBOT", list(start.coords), list(robot.coords))
-        if start == robot:
-            return None
-
         for obstacle in self.obstacles:
             intersection = p.intersection(obstacle)
             if intersection and intersection.geom_type == "MultiPoint":
@@ -176,17 +199,17 @@ class Solution(object):
                 else:
                     closest_intersection = (intersect_start, intersect_end, obstacle)
 
-        # if robot can be reached without collision
-        if not closest_intersection:
-            current_path.append(robot)
-            return None
-        # in case of collision move around obstacle
-        # and call function recursively from intersect_end
-        else:
-            current_path.extend(self.find_points_from_obstacle(*closest_intersection))
-            # self.reach_robot(self.path[-1], robot, current_path)
-            # to eliminate recursion depth just returning the next start point
-            return current_path[-1]
+                    # if robot can be reached without collision
+            if not closest_intersection:
+                current_path.append(robot)
+                return None
+                # in case of collision move around obstacle
+                # and call function recursively from intersect_end
+            else:
+                current_path.extend(self.find_points_from_obstacle(*closest_intersection))
+                # self.reach_robot(self.path[-1], robot, current_path)
+                # to eliminate recursion depth just returning the next start point
+                return current_path[-1]
 
     def get_edge_indices(self, point, coords):
         distances = []
@@ -252,5 +275,5 @@ with open('solver.mat', 'a') as sol_file:
     for p_ind in probs_to_solve:
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
-        # print(sol_str)
+        print('done ' + str(p_ind + 1))
         sol_file.writelines(sol_str + '\n')
