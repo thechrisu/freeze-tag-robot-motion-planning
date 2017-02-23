@@ -1,4 +1,5 @@
 from shapely.geometry import Point, LinearRing, LineString
+from vis import VisibilityGraph
 import os
 import threading
 
@@ -77,12 +78,16 @@ class Solution(object):
 
     def to_string(self):
         # tuples = self.answer()
-        self.answer()
-        path = ""
-        paths = list(map(self.list_of_points_to_path, self.paths))
-        path = "; ".join(paths)
-        # return (str(self.problem_number) + ':' + path).replace(" ", "")
-        return str(self.problem_number) + ': ' + path
+        # self.answer()
+
+        v = VisibilityGraph(self.robots, self.obstacles)
+
+        # path = ""
+        # paths = list(map(self.list_of_points_to_path, self.paths))
+        # path = "; ".join(paths)
+        # # return (str(self.problem_number) + ':' + path).replace(" ", "")
+        # return str(self.problem_number) + ': ' + path
+        return str(v.visible_graph)
 
     def remove_duplicates_and_append(self, path):
         unique_path = [path[0]]
@@ -146,7 +151,7 @@ class Solution(object):
 
         t1.join()
         t2.join()
-        print(len(self.left))
+        # print(len(self.left))
         # self.reach_closest_robot(robot, [robot])
 
     def reach_robot(self, start, robot, current_path):
@@ -225,7 +230,7 @@ class Solution(object):
         # print(intermediate_nodes)
         # print(s1, s2, e1, e2)
 
-        print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
+        # print(self.convert_points_to_tuples([entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]))
 
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
         # return self.convert_tuples_to_points(intermediate_nodes)
@@ -247,5 +252,5 @@ with open('solver.mat', 'a') as sol_file:
     for p_ind in probs_to_solve:
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
-        print(sol_str)
+        # print(sol_str)
         sol_file.writelines(sol_str + '\n')
