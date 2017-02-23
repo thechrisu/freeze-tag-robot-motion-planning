@@ -9,42 +9,62 @@ var _ = require("underscore");
 class ClusterSet {
     constructor() {
         this.clusters = [];
+        this.reverse_map = {};
     }
 
+    /**
+     * @deprecated
+     * @param botNum
+     * @returns {*}
+     */
     getClusterWithBot(botNum) {
-
+        return this.reverse_map[botNum];
     }
 
-    createClusters(robots) {
-        let graph = Graph.from(robots);
+    createClusters(robots, paths) {
+        let numEdgesToKeep;
+        numEdgesToKeep = robots.length < 10 ? Math.ceil(0.6 * robots.length) : Math.ceil(Math.sqrt(robots.length));
+        let graph = Graph.from(robots, paths);
+        //console.log(graph.nodes, graph.edges);
         let mst = (new PrimAlgorithm(graph)).doAlgo();
-        let numEdgesToKeep = Math.round(Math.sqrt(robots.length));
-        let reducedEdges = mst.removeNLongestEdges(robots.length - numEdgesToKeep);
-        let components = graph.getSetOfConnectedComponents(reducedEdges);
-        for(let i = 0; i < components.length; i++) {
-            this.clusters.push(new Cluster(/* TODO */));
+        //console.log(mst);
+        let reducedEdges = graph.trimToNEdges(numEdgesToKeep, mst);
+        //console.log(reducedEdges);
+        let components = graph.getSetOfConnectedComponents(reducedEdges, robots);
+        //console.log(components);
+        for (let i = 0; i < components.length; i++) {
+            let c = components[i];
+            let cl = new Cluster(c);
+            this.clusters.push(cl);
+            /*for (let j = 0; j < c.length; c++) {
+             this.reverse_map[c] = cl;
+             }*/
         }
     }
 }
 
 class Cluster {
     constructor(points) {
-        this.bots = [];
+        this.bots = points;
+        this.bots_dict = {};
+        for (let i = 0; i < this.bots.length; i++) {
+            this.bots_dict[this.bots[i]] = true;
+        }
     }
 
-    hasRobot() {
-
+    hasRobot(botNum) {
+        return this.bots_dict[botNum] !== undefined;
     }
 
     getRobots() {
-
+        return this.bots;
     }
 }
 
 class Edge {
-    constructor(source, sink, cost) {
-        this.source = source;
-        this.sink = sink;
+    constructor(startRobot, endRobot, cost) {
+        this.startRobot = startRobot;
+        this.endRobot = endRobot;
         this.cost = cost;
     }
 }
@@ -53,35 +73,30 @@ class Graph {
     constructor() {
         this.edges = {};
         this.nodes = [];
-        this.nodeMap = {};
-
     }
 
-    static from() {
-        return new Graph();
+    static from(bots, paths) {
+        let ret = new Graph();
+        ret.edges = paths;
+        ret.nodes = bots;
+        return ret;
     }
 
-
-    bfs (v, all_pairs, visited) { //stolen from http://stackoverflow.com/questions/21900713/finding-all-connected-components-of-an-undirected-graph
+    bfs(v, all_pairs) { //stolen from http://stackoverflow.com/questions/21900713/finding-all-connected-components-of-an-undirected-graph
         let q = [];
         let current_group = [];
-        let i, nextVertex, pair;
-        let length_all_pairs = all_pairs.length;
         q.push(v);
         while (q.length > 0) {
             v = q.shift();
-            if (!visited[v]) {
-                visited[v] = true;
+            if (!this.visited[v]) {
+                this.visited[v] = true;
                 current_group.push(v);
-                // go through the input array to find vertices that are
-                // directly adjacent to the current vertex, and put them
-                // onto the queue
-                for (i = 0; i < length_all_pairs; i += 1) {
-                    pair = all_pairs[i];
-                    if (pair[0] === v && !visited[pair[1]]) {
-                        q.push(pair[1]);
-                    } else if (pair[1] === v && !visited[pair[0]]) {
-                        q.push(pair[0]);
+                for (let i = 0; i < all_pairs.length; i += 1) {
+                    let e = all_pairs[i];
+                    if (parseInt(e.startRobot) === v && !this.visited[e.endRobot]) {
+                        q.push(e.endRobot);
+                    } else if (e.endRobot === v && !this.visited[e.startRobot]) {
+                        q.push(parseInt(e.startRobot));
                     }
                 }
             }
@@ -90,34 +105,26 @@ class Graph {
         return current_group;
     }
 
-    getSetOfConnectedComponents(edges) {
-        var pairs = [
-            ["a2", "a5"],
-            ["a3", "a6"],
-            ["a4", "a5"],
-            ["a7", "a9"]
-        ];
+    getSetOfConnectedComponents(edges, bots) {
         let groups = [];
-        let i, k, length, u, v, src, current_pair;
-        let visited = {};
-        // main loop - find any unvisited vertex from the input array and
-        // treat it as the source, then perform a breadth first search from
-        // it. All vertices visited from this search belong to the same group
-        for (i = 0, length = pairs.length; i < length; i += 1) {
-            current_pair = pairs[i];
-            u = current_pair[0];
-            v = current_pair[1];
-            src = null;
-            if (!visited[u]) {
-                src = u;
-            } else if (!visited[v]) {
-                src = v;
+        this.visited = {};
+        for (let i = 0; i < bots.length; i += 1) {
+            let b = bots[i];
+            /*let e = edges[i];
+             let u = parseInt(e.startRobot);
+             let v = e.endRobot;
+             let src = undefined;
+             if (!this.visited[u]) {
+             src = u;
+             } else if (!this.visited[v]) {
+             src = v;
+             }*/
+            let src = undefined;
+            if (!this.visited[b]) {
+                src = b;
             }
-            if (src) {
-                // there is an unvisited vertex in this pair.
-                // perform a breadth first search, and push the resulting
-                // group onto the list of all groups
-                groups.push(this.bfs(src, pairs, visited));
+            if (src !== undefined) {
+                groups.push(this.bfs(src, edges));
             }
         }
         return groups;
@@ -126,33 +133,33 @@ class Graph {
     // Add a node to the graph
     addNode(node) {
         this.nodes.push(node);
-        this.nodeMap[node] = this.nodes.length - 1;
         this.edges[node] = [];
     };
 
-    // Add an edge from source to sink with capacity
+    // Add an edge from startRobot to endRobot with capacity
     addEdge(source, sink, capacity) {
         // Create the two edges = one being the reverse of the other
         this.edges[source].push(new Edge(source, sink, capacity));
         this.edges[sink].push(new Edge(sink, source, capacity));
     };
 
-    // Does edge from source to sink exist?
+    // Does edge from startRobot to endRobot exist?
     edgeExists(source, sink) {
         if (this.edges[source] !== undefined)
             for (var i = 0; i < this.edges[source].length; i++)
-                if (this.edges[source][i].sink == sink)
+                if (this.edges[source][i].endRobot == sink)
                     return this.edges[source][i];
         return null;
     };
 
-    removeNLongestEdges(n) {
-        let edgesAsArray = [];
-        let sortedEdges = _.sortBy(edgesAsArray, (e) => { return e.cost });
-        while(sortedEdges.length > n && sortedEdges.length > 0) {
+    trimToNEdges(n, edges) {
+        let sortedEdges = _.sortBy(edges, (e) => {
+            return -e.cost; //instead of reverse()!
+        });
+        while (sortedEdges.length > n && sortedEdges.length > 0) {
             sortedEdges.pop();
         }
-        this.nLongestEdges = sortedEdges;
+        this.shortestEdges = sortedEdges;
         return sortedEdges;
     }
 }
@@ -160,23 +167,23 @@ class Graph {
 class PrimAlgorithm {
 
     constructor(graph) {
-        this.result = [];
+        this.re = [];
         this.usedNodes = {};
         this.graph = graph;
     }
 
     doAlgo() {
         let node = this.graph.nodes[Math.round(Math.random() * (this.graph.nodes.length - 1))];
-        this.result.push(node);
         this.usedNodes[node] = true;
 
-        var min = this.findMin(this.graph);
-        while (min != null) {
-            result.push(min);
-            this.usedNodes[min] = true;
-            min = this.findMin(g);
+        let min = this.findMin(this.graph);
+        while (min !== undefined) {
+            this.re.push(min);
+            //this.usedNodes[parseInt(min.startRobot)] = true;
+            this.usedNodes[min.endRobot] = true;
+            min = this.findMin(this.graph);
         }
-        return this.result;
+        return this.re;
     }
 
     /**
@@ -184,43 +191,50 @@ class PrimAlgorithm {
      * @param g
      */
     findMin(g) {
-        let min = [Infinity, null];
-        for (var i = 0; i < this.result.length; i++)
-            for (var n = 0; n < g.edges[this.result[i]].length; n++)
-                if (g.edges[this.result[i]][n].cost < min[0] && this.usedNodes[g.edges[this.result[i]][n].sink] === undefined)
-                    min = [g.edges[this.result[i]][n].cost, g.edges[this.result[i]][n].sink];
-        return min[1];
+        let min = undefined;
+        let nodesSoFar = Object.keys(this.usedNodes);
+        for (let i = 0; i < nodesSoFar.length; i++) {
+            let start = parseInt(nodesSoFar[i]);
+            let es = g.edges[start];
+            for (let n = 0; n < g.nodes.length; n++) {
+                let lucky = g.nodes[n];
+                if (lucky == start || this.usedNodes[es[lucky].endRobot] !== undefined) continue;
+                if (min === undefined || es[lucky].cost < min.cost) {
+                    min = es[lucky];
+                }
+            }
+        }
+        return min;
     }
 }
 
-var g = new Graph();
-
-g.addNode('a');
-g.addNode('b');
-g.addNode('c');
-g.addNode('d');
-g.addNode('e');
-g.addNode('f');
-
-g.addEdge('a', 'b', 1);
-g.addEdge('b', 'c', 3);
-g.addEdge('a', 'd', 3);
-g.addEdge('b', 'd', 2);
-g.addEdge('d', 'e', 3);
-g.addEdge('b', 'e', 6);
-g.addEdge('b', 'f', 5);
-g.addEdge('c', 'e', 4);
-g.addEdge('e', 'f', 2);
-g.addEdge('c', 'f', 4);
-
 /*
-var result = PrimAlgorithm(g).doAlgo();
-document.write('<h2>Result</h2>');
-document.write(result);
+ var g = new Graph();
 
+ g.addNode(0);
+ g.addNode(1);
+ g.addNode(2);
+ g.addNode(3);
+ g.addNode(4);
+ g.addNode(5);
+
+ g.addEdge(0, 1, 1300);
+ g.addEdge(1, 2, 300);
+ g.addEdge(0, 3, 3000);
+ g.addEdge(1, 3, 200);
+ g.addEdge(3, 4, 30000);
+ g.addEdge(1, 4, 6232451);
+ g.addEdge(1, 5, 5242);
+ g.addEdge(2, 4, 461);
+ g.addEdge(4, 5, 223);
+ g.addEdge(2, 5, 424);
+
+
+ var result = (new PrimAlgorithm(g)).doAlgo();
+
+ */
 module.exports = {
     Cluster,
     ClusterSet,
     PrimAlgorithm
 };
-*/
