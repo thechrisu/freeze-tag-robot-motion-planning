@@ -19,9 +19,9 @@ const PATH_SMOOTHING = true;
 const MIN_COST_CUTOFF_FACTOR = 2.2;
 const CREATE_SAFE_POINTS = true;
 const SAFE_POINT_SEARCH_START_RADIUS = 1;
-const MINIMUM_SAFE_POINT_OPENNESS = 0.05;
+const MINIMUM_SAFE_POINT_OPENNESS = 0.1;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 6;
+const CELLS_PER_UNIT = 7;
 const STROKE_WIDTH = 1;
 const ALPHA_CUTOFF_FACTOR = 5;
 
@@ -50,6 +50,16 @@ const working_configs = {
         MIN_COST_CUTOFF_FACTOR: 4,
         CELLS_PER_UNIT: 6,
         STROKE_WIDTH: 0.3,
+    },
+    22: {
+        PATH_SMOOTHING: true,
+        MIN_COST_CUTOFF_FACTOR: 2.2,
+        CREATE_SAFE_POINTS: true,
+        SAFE_POINT_SEARCH_START_RADIUS: 1,
+        MINIMUM_SAFE_POINT_OPENNESS: 0.1,
+        CELLS_PER_UNIT: 7,
+        STROKE_WIDTH: 1,
+        ALPHA_CUTOFF_FACTOR: 5,
     },
 };
 
