@@ -74,7 +74,9 @@ class Solution(object):
                 else:
                     cost = robot.distance(reach)
                     if len(self.obstacles) > 0:
-                        cost =  cost * self.num_intersections_between_points(robot, reach)
+                        num_intersections = self.num_intersections_between_points(robot, reach)
+                        if num_intersections > 1:
+                            cost *= 7
                     self.distances[self.point_to_key(robot)].append(tuple((reach, cost)))
             self.distances[self.point_to_key(robot)].sort(key=lambda x: x[1], reverse=True)
         print('==> done generating distance matrix')
@@ -106,6 +108,7 @@ class Solution(object):
 
 
     def list_of_points_to_path(self, points):
+        # print('in total: ' + str(len(points)) + ' num points')
         return (str(self.convert_points_to_tuples(points))[1:-1]).replace("'", "")
 
     def to_string(self):
@@ -147,7 +150,7 @@ class Solution(object):
         #         new_points.append(tuple(("{0:.11f}".format(point.x), "{0:.11f}".format(point.y))))
         #
         # return new_points
-        return [("{0:.16f}".format(point.x), "{0:.16f}".format(point.y)) for point in points]
+        return [("{0:.11f}".format(point.x), "{0:.11f}".format(point.y)) for point in points]
 
     def convert_tuples_to_points(self, points):
         return [Point(x, y) for x, y in points]
@@ -200,16 +203,16 @@ class Solution(object):
                     closest_intersection = (intersect_start, intersect_end, obstacle)
 
                     # if robot can be reached without collision
-            if not closest_intersection:
-                current_path.append(robot)
-                return None
-                # in case of collision move around obstacle
-                # and call function recursively from intersect_end
-            else:
-                current_path.extend(self.find_points_from_obstacle(*closest_intersection))
-                # self.reach_robot(self.path[-1], robot, current_path)
-                # to eliminate recursion depth just returning the next start point
-                return current_path[-1]
+        if not closest_intersection:
+            current_path.append(robot)
+            return None
+            # in case of collision move around obstacle
+            # and call function recursively from intersect_end
+        else:
+            current_path.extend(self.find_points_from_obstacle(*closest_intersection))
+            # self.reach_robot(self.path[-1], robot, current_path)
+            # to eliminate recursion depth just returning the next start point
+            return current_path[-1]
 
     def get_edge_indices(self, point, coords):
         distances = []
