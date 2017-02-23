@@ -260,7 +260,7 @@ class PathGenerator {
     }
 
     getLeastBusyThread() {
-        if(!this.memoryThread) this.memoryThread = 0;
+        if(this.memoryThread === undefined) this.memoryThread = 0;
         else this.memoryThread = (this.memoryThread + 1) % CPUCount;
         return this.threads[this.memoryThread];
         // let threadCount = this.threads.length;
