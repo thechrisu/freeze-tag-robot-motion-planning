@@ -11,6 +11,7 @@ const DECIMAL_POINTS = 8;
 
 const deasync = require('deasync');
 const CoordinateHelper = require('./CoordinateHelper').CoordinateHelper;
+const Point = require('./CoordinateHelper').Point;
 const PathGenerator = require('./PathGenerator').PathGenerator;
 const fs = require('fs');
 const TimSort = require('timsort');
@@ -155,14 +156,14 @@ class Solution {
             let temp = [];
             let pathLength = path.length;
             for (let i = 0; i < pathLength; i++) {
-                let numbers = path[i];
+                let point = path[i];
                 if (i != 0 && i != pathLength - 1) {
-                    let newNumbers = [];
-                    newNumbers.push(parseFloat(numbers[0].toFixed(DECIMAL_POINTS)));
-                    newNumbers.push(parseFloat(numbers[1].toFixed(DECIMAL_POINTS)));
-                    numbers = newNumbers;
+                    point = new Point(
+                        parseFloat(point.x.toFixed(DECIMAL_POINTS)),
+                        parseFloat(point.y.toFixed(DECIMAL_POINTS))
+                    );
                 }
-                temp.push(numbers);
+                temp.push(point);
             }
             path = temp;
         }
