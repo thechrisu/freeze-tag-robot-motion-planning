@@ -21,7 +21,7 @@ const CREATE_SAFE_POINTS = true;
 const SAFE_POINT_SEARCH_START_RADIUS = 1;
 const MINIMUM_SAFE_POINT_OPENNESS = 0.05;
 const THREAD_FILE = 'PathGeneratorThread.js';
-const CELLS_PER_UNIT = 34;
+const CELLS_PER_UNIT = 6;
 const STROKE_WIDTH = 1;
 const ALPHA_CUTOFF_FACTOR = 5;
 
@@ -137,7 +137,6 @@ class PathGenerator {
         this.callback = callback;
         this.paths = {};
         this.jobCount = 0;
-        this.prepareThreads();
         this.calculateSearchDomain();
         this.addJobs();
     }
@@ -195,6 +194,7 @@ class PathGenerator {
         let obstacleCount = this.problem.obstacles.length;
         let gridMatrix = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles, STROKE_WIDTH) : null;
         let gridMatrixNoStroke = obstacleCount > 0 ? this.generateGridMatrix(this.problem.obstacles, 0) : null;
+        this.prepareThreads(gridMatrix);
         this.calculateScaledSafePoints(gridMatrix, gridMatrixNoStroke);
         let robotCount = this.problem.robotLocations.length;
         let processedPaths = {};
@@ -203,6 +203,7 @@ class PathGenerator {
             let searchDomainLength = searchDomain.length;
             console.log('Adding... ' + (startRobot) + ' of ' + robotCount + ', ' + searchDomainLength);
             for (let domainIndex = 0; domainIndex < searchDomainLength; domainIndex++) {
+
                 let endRobot = searchDomain[domainIndex];
                 if (processedPaths[startRobot] === undefined) processedPaths[startRobot] = {};
                 if (processedPaths[endRobot] === undefined) processedPaths[endRobot] = {};
@@ -225,7 +226,6 @@ class PathGenerator {
                     safeStart: this.scaledSafePoints[startRobot],
                     end: this.scalePointToProblem(this.problem.robotLocations[endRobot]),
                     safeEnd: this.scaledSafePoints[endRobot],
-                    gridMatrix,
                 };
                 this.calculateUsingThread(dataObject);
 
@@ -277,12 +277,17 @@ class PathGenerator {
         // return this.threads[threadIndex];
     }
 
-    prepareThreads() {
+    prepareThreads(gridMatrix) {
+        let dataObject = {
+            setup: true,
+            gridMatrix: gridMatrix,
+        };
         this.threadLoad = [];
         this.threads = [];
         for (let i = 0; i < CPUCount; i++) {
             this.threadLoad.push(0);
             let thread = childProcess.fork(path.join(__dirname, THREAD_FILE));
+            thread.send(dataObject);
             thread.on('message', (data) => {
                 let k = i;
                 this.threadLoad[k] = this.threadLoad[k] - 1;

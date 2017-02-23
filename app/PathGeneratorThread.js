@@ -13,7 +13,14 @@ let finder = new PF.AStarFinder({
     dontCrossCorners: true,
 });
 
+let gridMatrix = null;
+
 process.on('message', (data) => {
+
+    if(data.setup) {
+        gridMatrix = data.gridMatrix;
+        return;
+    }
 
     let obstacleCount = data.obstacleCount;
     let startRobot = data.startRobot;
@@ -30,7 +37,7 @@ process.on('message', (data) => {
     if (obstacleCount > 0) {
         let pathStart = safeStart !== null ? safeStart : start;
         let pathEnd = safeEnd !== null ? safeEnd : end;
-        let grid = new PF.Grid(data.gridMatrix);
+        let grid = new PF.Grid(gridMatrix);
         path = PF.Util.compressPath(finder.findPath(
             Math.round(pathStart.x),
             Math.round(pathStart.y),
