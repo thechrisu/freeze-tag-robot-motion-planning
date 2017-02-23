@@ -78,7 +78,7 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
         line = line.replace(/\s/gi, '');
         let parts = line.split(':');
         let problemNumber = parseInt(parts[0]);
-        problemRobotCount += problems[problemNumber].robotLocations.length;
+        problemRobotCount += problems[problemNumber - 1].robotLocations.length;
         let parseQuestion = ignoreQuestions.indexOf(problemNumber) === -1;
         let paths = parts[1].split(';');
         for (let i = 0; i < paths.length; i++) {
