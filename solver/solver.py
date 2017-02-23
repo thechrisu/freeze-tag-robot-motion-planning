@@ -2,6 +2,7 @@ from shapely.geometry import Point, LinearRing, LineString
 import os
 import threading
 from rdp import rdp_top_level
+import cluster
 
 problems = []
 probs_to_solve = list(range(0, 30))
@@ -231,6 +232,39 @@ class Solution(object):
         return [entry] + self.convert_tuples_to_points(intermediate_nodes) + [exit]
         # return self.convert_tuples_to_points(intermediate_nodes)
 
+NUM_CLUSTERS = 4
+
+
+def find_closest_robot(bot, potential_goals):
+    return None, -1
+    pass
+
+
+def getGreedyOptions(availableRobots, sleepingRobots):
+    unsorted_options = []
+    # TODO: Get visibility paths for every bot in availableRobots, sleepingRobots
+    return sorted(unsorted_options, key=(lambda x: x.cost))
+
+
+def doComputationStep(availableRobots, sleepingRobots):
+    clusters = cluster.getKClusters(sleepingRobots, NUM_CLUSTERS)
+    best_by_cluster = {}
+    for cluster_num in clusters:
+        minDist = 999999
+        best_bot = None
+        for bot in availableRobots:
+            closest, distance = find_closest_robot(bot, clusters[cluster_num])
+            if minDist < distance:
+                best_bot = closest
+        best_by_cluster[cluster_num] = best_bot
+    #  TODO: Move best by cluster
+    #  TODO: Get greedy option for remaining bots
+    return options
+
+
+def moveBots(options):
+    pass
+
 robots_file = open('robots.mat', 'r')
 for line in robots_file.readlines():
     halves = line.split(':')
@@ -246,6 +280,8 @@ with open('solver.mat', 'a') as sol_file:
     sol_file.writelines(USER_NAME + '\n')
     sol_file.writelines(PASS + '\n')
     for p_ind in probs_to_solve:
+        if p_ind != 0:
+            continue
         sol = Solution(problems[p_ind])
         sol_str = sol.to_string()
         print(sol_str)
