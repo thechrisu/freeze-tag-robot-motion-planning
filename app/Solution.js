@@ -13,7 +13,7 @@ const fs = require('fs');
 const TimSort = require('timsort');
 const ClusterSet = require('./Cluster').ClusterSet;
 
-const ENABLE_CLUSTERING = true;
+const ENABLE_CLUSTERING = false;
 const MAX_NEW_CLUSTERS_PER_STEP = 5; //More new clusters get explored if increased
 
 class Solution {
