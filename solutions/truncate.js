@@ -8,9 +8,10 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const ProblemSet = require('../app/ProblemSet');
+const PF = require('pathfinding');
 
-const FILE = path.join(__dirname, 'best.mat');
-const OUT = path.join(__dirname, 'truncated.mat');
+const FILE = path.join(__dirname, 'best-with-30-from-python.mat');
+const OUT = path.join(__dirname, 'truncated-30-python.mat');
 
 
 let ignoreQuestions = [
@@ -54,13 +55,16 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
     let isRobot = (problemNumber, x, y) => {
         let problemIndex = problemNumber - 1;
         let locationCount = problems[problemIndex].robotLocations.length;
-        let cutoff = 0.00000001;
+        let cutoff = 0.0000001;
         for (let i = 0; i < locationCount; i++) {
             let xDiff = Math.abs(problems[problemIndex].robotLocations[i].x - x);
             let yDiff = Math.abs(problems[problemIndex].robotLocations[i].y - y);
             if (xDiff < cutoff && yDiff < cutoff) {
                 robotCount++;
-                return true;
+                return {
+                    x: problems[problemIndex].robotLocations[i].x,
+                    y: problems[problemIndex].robotLocations[i].y,
+                };
             }
         }
         return false;
@@ -85,14 +89,27 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
             let points = paths[i].replace(/(^\(|\)$)/gi, '').split('),(');
             let pathString = '(';
             let pointCount = points.length;
+            let pointArray = [];
             for (let k = 0; k < pointCount; k++) {
-                if (k != 0) pathString += '),(';
                 let numbers = points[k].split(',');
                 let x = parseFloat(numbers[0]);
                 let y = parseFloat(numbers[1]);
-                if (!isRobot(problemNumber, x, y) && parseQuestion) {
+                pointArray.push([x, y]);
+            }
+            pointArray = PF.Util.compressPath(pointArray);
+            pointCount = pointArray.length;
+            for (let k = 0; k < pointCount; k++) {
+                if (k != 0) pathString += '),(';
+                let numbers = pointArray[k];
+                let x = numbers[0];
+                let y = numbers[1];
+                let robotBool = isRobot(problemNumber, x, y);
+                if (robotBool === false && parseQuestion) {
                     x = parseFloat(x.toFixed(12));
                     y = parseFloat(y.toFixed(12));
+                } else {
+                    x = robotBool.x;
+                    y = robotBool.y;
                 }
                 pathString += x + ',' + y;
             }
