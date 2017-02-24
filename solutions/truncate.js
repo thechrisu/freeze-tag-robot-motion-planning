@@ -8,10 +8,12 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const ProblemSet = require('../app/ProblemSet');
+const PathGenerator = require('../app/PathGenerator').PathGenerator;
+const Point = require('../app/CoordinateHelper').Point;
 const PF = require('pathfinding');
 
-const FILE = path.join(__dirname, 'best.mat');
-const OUT = path.join(__dirname, 'truncated.mat');
+const FILE = path.join(__dirname, 'best-with-30-from-python.mat');
+const OUT = path.join(__dirname, 'truncated-30-python.mat');
 
 
 let ignoreQuestions = [
@@ -55,7 +57,7 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
     let isRobot = (problemNumber, x, y) => {
         let problemIndex = problemNumber - 1;
         let locationCount = problems[problemIndex].robotLocations.length;
-        let cutoff = 0.0000001;
+        let cutoff = 0.000000001;
         for (let i = 0; i < locationCount; i++) {
             let xDiff = Math.abs(problems[problemIndex].robotLocations[i].x - x);
             let yDiff = Math.abs(problems[problemIndex].robotLocations[i].y - y);
@@ -82,6 +84,13 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
         line = line.replace(/\s/gi, '');
         let parts = line.split(':');
         let problemNumber = parseInt(parts[0]);
+        let pythonProblems = [30];
+        let grid;
+        let generator = new PathGenerator(problems[problemNumber - 1]);
+        if (pythonProblems.indexOf(problemNumber) !== -1) {
+            console.log(problemNumber);
+            grid = generator.generateGridMatrix(problems[problemNumber - 1].obstacles, 0.1);
+        }
         problemRobotCount += problems[problemNumber - 1].robotLocations.length;
         let parseQuestion = ignoreQuestions.indexOf(problemNumber) === -1;
         let paths = parts[1].split(';');
@@ -94,20 +103,25 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
                 let numbers = points[k].split(',');
                 let x = parseFloat(numbers[0]);
                 let y = parseFloat(numbers[1]);
-                // let robotBool = isRobot(problemNumber, x, y);
-                // if(robotBool === false) {
-                //     x = parseFloat(x.toFixed(12));
-                //     y = parseFloat(y.toFixed(12));
-                // }
+                let point = generator.scalePointToProblem(new Point(x, y));
+                let robotBool = isRobot(problemNumber, x, y);
+                if (robotBool === false) {
+                    x = parseFloat(point.x.toFixed(12));
+                    y = parseFloat(point.y.toFixed(12));
+                }
                 pointArray.push([x, y]);
             }
-            pointArray = PF.Util.compressPath(pointArray);
+            if (pythonProblems.indexOf(problemNumber) !== -1) {
+                console.log('Smoothening!');
+                pointArray = PF.Util.smoothenPath(new PF.Grid(grid), pointArray);
+            }
+            pointArray = generator.convertPathToOriginalScalePoints(pointArray);
             pointCount = pointArray.length;
             for (let k = 0; k < pointCount; k++) {
                 if (k != 0) pathString += '),(';
                 let numbers = pointArray[k];
-                let x = numbers[0];
-                let y = numbers[1];
+                let x = numbers.x;
+                let y = numbers.y;
                 let robotBool = isRobot(problemNumber, x, y);
                 if (robotBool === false && parseQuestion) {
                     x = parseFloat(x.toFixed(12));
