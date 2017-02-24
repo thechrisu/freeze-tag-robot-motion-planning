@@ -10,8 +10,8 @@ const readline = require('readline');
 const ProblemSet = require('../app/ProblemSet');
 const PF = require('pathfinding');
 
-const FILE = path.join(__dirname, 'best-with-30-from-python.mat');
-const OUT = path.join(__dirname, 'truncated-30-python.mat');
+const FILE = path.join(__dirname, 'best.mat');
+const OUT = path.join(__dirname, 'truncated.mat');
 
 
 let ignoreQuestions = [
@@ -94,6 +94,11 @@ ProblemSet.importFromFile('robots.mat', (problems) => {
                 let numbers = points[k].split(',');
                 let x = parseFloat(numbers[0]);
                 let y = parseFloat(numbers[1]);
+                // let robotBool = isRobot(problemNumber, x, y);
+                // if(robotBool === false) {
+                //     x = parseFloat(x.toFixed(12));
+                //     y = parseFloat(y.toFixed(12));
+                // }
                 pointArray.push([x, y]);
             }
             pointArray = PF.Util.compressPath(pointArray);
